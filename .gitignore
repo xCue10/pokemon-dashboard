@@ -1,0 +1,12 @@
+.claude/
+node_modules/
+client/node_modules/
+server/node_modules/
+client/dist/
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
