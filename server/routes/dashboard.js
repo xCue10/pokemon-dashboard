@@ -29,14 +29,18 @@ router.get('/stats', async (req, res, next) => {
           COALESCE(SUM(ebay_fees_total) FILTER (WHERE status='sold'), 0) AS total_fees
         FROM ebay_listings
       `),
-      // Best and worst performing cards by ROI
+      // Best and worst performing items by ROI (cards + sealed)
       query(`
-        SELECT id, name, set_name, image_url, purchase_price, market_price, quantity,
+        SELECT id, name, set_name, purchase_price, market_price, quantity, source,
           CASE WHEN purchase_price > 0
             THEN ROUND(((market_price - purchase_price) / purchase_price * 100)::numeric, 2)
             ELSE 0 END AS roi_pct,
           (market_price - purchase_price) * quantity AS profit
-        FROM cards
+        FROM (
+          SELECT id, name, set_name, purchase_price, market_price, quantity, 'card' AS source FROM cards
+          UNION ALL
+          SELECT id, name, set_name, purchase_price, market_price, quantity, 'sealed' AS source FROM sealed_products
+        ) AS combined
         WHERE purchase_price > 0 AND market_price IS NOT NULL
         ORDER BY roi_pct DESC
         LIMIT 5
@@ -52,14 +56,18 @@ router.get('/stats', async (req, res, next) => {
       `),
     ]);
 
-    // Worst performers (separate query)
+    // Worst performers (separate query, cards + sealed)
     const worstResult = await query(`
-      SELECT id, name, set_name, image_url, purchase_price, market_price, quantity,
+      SELECT id, name, set_name, purchase_price, market_price, quantity, source,
         CASE WHEN purchase_price > 0
           THEN ROUND(((market_price - purchase_price) / purchase_price * 100)::numeric, 2)
           ELSE 0 END AS roi_pct,
         (market_price - purchase_price) * quantity AS profit
-      FROM cards
+      FROM (
+        SELECT id, name, set_name, purchase_price, market_price, quantity, 'card' AS source FROM cards
+        UNION ALL
+        SELECT id, name, set_name, purchase_price, market_price, quantity, 'sealed' AS source FROM sealed_products
+      ) AS combined
       WHERE purchase_price > 0 AND market_price IS NOT NULL
       ORDER BY roi_pct ASC
       LIMIT 5

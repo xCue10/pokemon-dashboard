@@ -214,7 +214,10 @@ function PerformersTable({ title, cards = [], worst = false }) {
                 <span className="text-lg font-bold text-gray-300 w-6 text-center">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-gray-800 truncate">{card.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{card.set_name}</p>
+                  <p className="text-xs text-gray-400 truncate">
+                    {card.set_name}
+                    {card.source === 'sealed' && <span className="ml-1 text-blue-400 font-medium">· Sealed</span>}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className={`text-sm font-bold ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
