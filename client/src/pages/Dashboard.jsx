@@ -126,7 +126,7 @@ export default function Dashboard() {
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
-          <h3 className="font-bold text-gray-900 mb-4">Portfolio Value by Set</h3>
+          <h3 className="font-bold text-gray-900 mb-4">Portfolio by Category</h3>
           <PortfolioBySet data={charts?.portfolio_by_set || []} />
         </div>
         <div className="card">

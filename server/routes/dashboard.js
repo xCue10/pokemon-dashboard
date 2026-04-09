@@ -99,20 +99,26 @@ router.get('/stats', async (req, res, next) => {
 router.get('/charts', async (req, res, next) => {
   try {
     const [bySet, priceComparison, monthlySales] = await Promise.all([
-      // Portfolio value by set (cards + sealed)
+      // Portfolio value by category
       query(`
-        SELECT set_name,
+        SELECT category,
           ROUND(SUM(market_price * quantity)::numeric, 2) AS market_value,
           ROUND(SUM(purchase_price * quantity)::numeric, 2) AS invested
         FROM (
-          SELECT set_name, market_price, purchase_price, quantity FROM cards
+          SELECT
+            CASE
+              WHEN condition ILIKE 'PSA%' OR condition ILIKE 'BGS%' OR condition ILIKE 'CGC%'
+                THEN 'Singles (Graded)'
+              ELSE 'Singles (Raw)'
+            END AS category,
+            market_price, purchase_price, quantity
+          FROM cards
           UNION ALL
-          SELECT set_name, market_price, purchase_price, quantity FROM sealed_products
+          SELECT 'Sealed' AS category, market_price, purchase_price, quantity
+          FROM sealed_products
         ) AS combined
-        WHERE set_name IS NOT NULL
-        GROUP BY set_name
-        ORDER BY market_value DESC
-        LIMIT 15
+        GROUP BY category
+        ORDER BY category
       `),
       // Purchase price vs market price per card (top 20 by market value)
       query(`
