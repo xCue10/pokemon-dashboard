@@ -179,12 +179,26 @@ export default function Sealed() {
                   </td>
                   <td className="table-td text-gray-500 whitespace-nowrap">{p.product_type || '—'}</td>
                   <td className="table-td text-gray-500 whitespace-nowrap">{p.set_name || '—'}</td>
-                  <td className="table-td">{formatCurrency(p.purchase_price)}</td>
+                  <td className="table-td">
+                    {p.purchase_price ? (
+                      <>
+                        {formatCurrency(p.total_purchase_value)}
+                        {p.quantity > 1 && (
+                          <span className="block text-xs text-gray-400">{formatCurrency(p.purchase_price)} ea</span>
+                        )}
+                      </>
+                    ) : '—'}
+                  </td>
                   <td className="table-td text-gray-500">{formatDate(p.purchase_date)}</td>
                   <td className="table-td text-center">{p.quantity}</td>
                   <td className="table-td font-semibold">
                     {p.market_price ? (
-                      <span className="text-pokemon-red">{formatCurrency(p.market_price)}</span>
+                      <span className="text-pokemon-red">
+                        {formatCurrency(p.total_market_value)}
+                        {p.quantity > 1 && (
+                          <span className="block text-xs font-normal text-gray-400">{formatCurrency(p.market_price)} ea</span>
+                        )}
+                      </span>
                     ) : (
                       <span className="text-gray-300">—</span>
                     )}

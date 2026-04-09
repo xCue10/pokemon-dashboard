@@ -192,7 +192,16 @@ export default function Collection() {
                   </td>
                   <td className="table-td text-gray-500 whitespace-nowrap">{card.set_name || '—'}</td>
                   <td className="table-td text-gray-500">{card.card_number || '—'}</td>
-                  <td className="table-td">{formatCurrency(card.purchase_price)}</td>
+                  <td className="table-td">
+                    {card.purchase_price ? (
+                      <>
+                        {formatCurrency(card.total_purchase_value)}
+                        {card.quantity > 1 && (
+                          <span className="block text-xs text-gray-400">{formatCurrency(card.purchase_price)} ea</span>
+                        )}
+                      </>
+                    ) : '—'}
+                  </td>
                   <td className="table-td text-gray-500">{formatDate(card.purchase_date)}</td>
                   <td className="table-td text-center">{card.quantity}</td>
                   <td className="table-td">
@@ -204,7 +213,12 @@ export default function Collection() {
                   </td>
                   <td className="table-td font-semibold">
                     {card.market_price ? (
-                      <span className="text-pokemon-red">{formatCurrency(card.market_price)}</span>
+                      <span className="text-pokemon-red">
+                        {formatCurrency(card.total_market_value)}
+                        {card.quantity > 1 && (
+                          <span className="block text-xs font-normal text-gray-400">{formatCurrency(card.market_price)} ea</span>
+                        )}
+                      </span>
                     ) : (
                       <span className="text-gray-300">—</span>
                     )}
