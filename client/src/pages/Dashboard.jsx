@@ -153,7 +153,6 @@ export default function Dashboard() {
           <div className="space-y-3">
             {recent_sales.map(sale => (
               <div key={sale.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                {sale.image_url && <img src={sale.image_url} alt={sale.card_name} className="h-12 w-9 object-contain rounded" />}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-gray-800 truncate">{sale.card_name || 'Unknown Card'}</p>
                   <p className="text-xs text-gray-400">{formatDate(sale.sold_date)}</p>
@@ -213,11 +212,6 @@ function PerformersTable({ title, cards = [], worst = false }) {
             return (
               <div key={card.id} className="flex items-center gap-3">
                 <span className="text-lg font-bold text-gray-300 w-6 text-center">{i + 1}</span>
-                {card.image_url ? (
-                  <img src={card.image_url} alt={card.name} className="h-10 w-8 object-contain rounded" />
-                ) : (
-                  <div className="h-10 w-8 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-400">?</div>
-                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-gray-800 truncate">{card.name}</p>
                   <p className="text-xs text-gray-400 truncate">{card.set_name}</p>
