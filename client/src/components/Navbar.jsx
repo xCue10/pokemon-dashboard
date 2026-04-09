@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import useDarkMode from '../hooks/useDarkMode';
 
 const links = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -9,6 +10,8 @@ const links = [
 ];
 
 export default function Navbar() {
+  const [isDark, toggleDark] = useDarkMode();
+
   return (
     <header className="pokemon-header pokeball-bg relative overflow-hidden shadow-lg">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,7 +34,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Nav links */}
+          {/* Nav links + dark mode toggle */}
           <nav className="flex items-center gap-1">
             {links.map(({ to, label }) => (
               <NavLink
@@ -47,6 +50,21 @@ export default function Navbar() {
                 {label}
               </NavLink>
             ))}
+
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleDark}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="ml-2 w-12 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 flex-shrink-0"
+              style={{ backgroundColor: isDark ? '#4B5563' : 'rgba(255,255,255,0.25)' }}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 flex items-center justify-center text-xs"
+                style={{ transform: isDark ? 'translateX(24px)' : 'translateX(0)' }}
+              >
+                {isDark ? '🌙' : '☀️'}
+              </span>
+            </button>
           </nav>
         </div>
       </div>
