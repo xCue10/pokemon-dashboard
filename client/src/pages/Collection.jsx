@@ -8,8 +8,8 @@ import toast from 'react-hot-toast';
 const SORT_FIELDS = {
   name: 'Name',
   set_name: 'Set',
+  card_number: 'Number',
   purchase_price: 'Purchase',
-  market_price: 'Market',
   purchase_date: 'Date',
   quantity: 'Qty',
 };
@@ -154,7 +154,6 @@ export default function Collection() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="table-th w-14">Image</th>
                 {Object.entries(SORT_FIELDS).map(([field, label]) => (
                   <th key={field} className="table-th" onClick={() => handleSort(field)}>
                     {label}{sortIcon(field)}
@@ -169,24 +168,17 @@ export default function Collection() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={12} className="text-center py-12 text-gray-400">
+                <tr><td colSpan={11} className="text-center py-12 text-gray-400">
                   <div className="spinner mx-auto mb-2" />Loading…
                 </td></tr>
               ) : cards.length === 0 ? (
-                <tr><td colSpan={12} className="text-center py-16 text-gray-400">
+                <tr><td colSpan={11} className="text-center py-16 text-gray-400">
                   <p className="text-4xl mb-3">🃏</p>
                   <p className="font-medium">No cards yet</p>
                   <p className="text-sm mt-1">Click <strong>+ Add Card</strong> to start your collection</p>
                 </td></tr>
               ) : cards.map(card => (
                 <tr key={card.id} className="table-row-hover">
-                  <td className="table-td">
-                    {card.image_url ? (
-                      <img src={card.image_url} alt={card.name} className="h-12 w-9 object-contain rounded shadow-sm" />
-                    ) : (
-                      <div className="h-12 w-9 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-400">?</div>
-                    )}
-                  </td>
                   <td className="table-td font-medium text-gray-900 max-w-xs">
                     <p className="truncate">{card.name}</p>
                   </td>
