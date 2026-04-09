@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getEbayListings, createEbayListing, updateEbayListing, markEbaySold, deleteEbayListing, exportEbay } from '../utils/api';
+import { getEbayListings, createEbayListing, updateEbayListing, markEbaySold, deleteEbayListing, exportEbay, importEbayOrders } from '../utils/api';
 import { formatCurrency, formatDate, profitClass, statusBadgeClass } from '../utils/format';
 import EbayForm from '../components/EbayForm';
 import SoldForm from '../components/SoldForm';
@@ -15,6 +15,7 @@ export default function EbayTracker() {
   const [sort, setSort] = useState('created_at');
   const [order, setOrder] = useState('DESC');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [importing, setImporting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,6 +74,22 @@ export default function EbayTracker() {
     }
   };
 
+  const handleImportEbay = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+    setImporting(true);
+    try {
+      const result = await importEbayOrders(file);
+      toast.success(`Imported ${result.imported} Pokémon sale${result.imported !== 1 ? 's' : ''} (${result.skipped} non-Pokémon skipped)`);
+      load();
+    } catch (err) {
+      toast.error('Import failed: ' + err.message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleSort = (field) => {
     if (sort === field) setOrder(o => o === 'ASC' ? 'DESC' : 'ASC');
     else { setSort(field); setOrder('DESC'); }
@@ -99,6 +116,10 @@ export default function EbayTracker() {
         </div>
         <div className="flex gap-2">
           <button onClick={exportEbay} className="btn-secondary text-sm">📤 Export CSV</button>
+          <label className={`btn-secondary text-sm cursor-pointer ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
+            {importing ? <><span className="spinner mr-1" style={{ width: 12, height: 12, borderWidth: 2 }} />Importing…</> : '📥 Import eBay Orders'}
+            <input type="file" accept=".csv" className="hidden" onChange={handleImportEbay} disabled={importing} />
+          </label>
           <button onClick={openAdd} className="btn-primary text-sm">+ New Listing</button>
         </div>
       </div>

@@ -47,6 +47,12 @@ export const updateSealed = (id, data) => api.put(`/sealed/${id}`, data).then(r 
 export const deleteSealed = (id) => api.delete(`/sealed/${id}`).then(r => r.data);
 
 // Import/Export
+export const importEbayOrders = (file) => {
+  const fd = new FormData();
+  fd.append('file', file);
+  return api.post('/import/ebay-orders', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
+};
+
 export const importCards = (file) => {
   const fd = new FormData();
   fd.append('file', file);

@@ -69,6 +69,72 @@ router.post('/cards', upload.single('file'), async (req, res, next) => {
   }
 });
 
+// POST /api/import/ebay-orders — imports Pokémon sales from an eBay orders CSV export
+router.post('/ebay-orders', upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    // eBay CSV has a blank first row before the headers — skip it
+    const lines = req.file.buffer.toString().split('\n');
+    const withoutBlankFirst = lines.slice(1).join('\n');
+
+    const rows = await streamToRows(Buffer.from(withoutBlankFirst));
+
+    const POKEMON_RE = /pokemon|pokémon|\bGX\b|\bEX\b|\bVMAX\b|\bVSTAR\b/i;
+
+    function parseEbayDate(str) {
+      if (!str || !str.trim()) return null;
+      const months = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+      const [mon, day, yr] = str.trim().split('-');
+      if (!mon || !day || !yr) return null;
+      const month = months[mon];
+      if (month === undefined) return null;
+      return new Date(2000 + parseInt(yr), month, parseInt(day)).toISOString().split('T')[0];
+    }
+
+    function parsePrice(str) {
+      if (!str) return null;
+      const num = parseFloat(str.replace(/[$,]/g, ''));
+      return isNaN(num) ? null : num;
+    }
+
+    const FEE_RATE = 0.1325;
+    const FEE_FIXED = 0.30;
+
+    let imported = 0;
+    let skipped = 0;
+
+    for (const row of rows) {
+      const title = (row['Item Title'] || '').trim();
+      if (!title || !POKEMON_RE.test(title)) { skipped++; continue; }
+
+      const soldPrice = parsePrice(row['Sold For']);
+      if (!soldPrice) { skipped++; continue; }
+
+      const saleDate = parseEbayDate(row['Sale Date']);
+      const itemNumber = (row['Item Number'] || '').trim();
+      const listingUrl = itemNumber ? `https://www.ebay.com/itm/${itemNumber}` : null;
+      const feesTotal = Math.round((soldPrice * FEE_RATE + FEE_FIXED) * 100) / 100;
+      const netProfit = Math.round((soldPrice - feesTotal) * 100) / 100;
+
+      await query(
+        `INSERT INTO ebay_listings
+          (listing_price, listing_date, status, sold_price, sold_date,
+           ebay_fee_rate, ebay_fee_fixed, ebay_fees_total, shipping_cost,
+           net_profit, listing_url, notes)
+         VALUES ($1,$2,'sold',$3,$4,$5,$6,$7,0,$8,$9,$10)`,
+        [soldPrice, saleDate, soldPrice, saleDate,
+         FEE_RATE, FEE_FIXED, feesTotal, netProfit, listingUrl, title]
+      );
+      imported++;
+    }
+
+    res.json({ imported, skipped });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/export/cards
 router.get('/cards', async (req, res, next) => {
   try {
