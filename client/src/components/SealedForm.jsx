@@ -2,45 +2,49 @@ import { useState, useEffect } from 'react';
 import { formatDateInput } from '../utils/format';
 import toast from 'react-hot-toast';
 
-const CONDITIONS = [
-  'PSA 10', 'PSA 9', 'PSA 8', 'PSA 7', 'PSA 6', 'PSA 5', 'PSA 4', 'PSA 3', 'PSA 2', 'PSA 1',
-  'Raw Gem Mint', 'Raw NM/MT', 'Raw NM', 'Raw EX/MT', 'Raw EX', 'Raw VG/EX', 'Raw VG', 'Raw Good', 'Raw Poor',
+const PRODUCT_TYPES = [
+  'Booster Box',
+  'Elite Trainer Box',
+  'Blister Pack',
+  'Tin',
+  'Bundle',
+  'Display Box',
+  'Collection Box',
+  'Premium Collection',
+  'Booster Pack',
+  'Other',
 ];
 
 const EMPTY = {
-  name: '', set_name: '', card_number: '', condition: '', quantity: 1,
-  purchase_price: '', purchase_date: '', notes: '',
-  pokemon_tcg_id: '', market_price: '', image_url: '', set_id: '',
+  name: '', product_type: '', set_name: '', quantity: 1,
+  purchase_price: '', purchase_date: '', market_price: '', image_url: '', notes: '',
 };
 
-export default function CardForm({ card, onSave, onClose }) {
+export default function SealedForm({ product, onSave, onClose }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (card) {
+    if (product) {
       setForm({
-        name: card.name || '',
-        set_name: card.set_name || '',
-        card_number: card.card_number || '',
-        condition: card.condition || '',
-        quantity: card.quantity || 1,
-        purchase_price: card.purchase_price || '',
-        purchase_date: formatDateInput(card.purchase_date),
-        notes: card.notes || '',
-        pokemon_tcg_id: card.pokemon_tcg_id || '',
-        market_price: card.market_price || '',
-        image_url: card.image_url || '',
-        set_id: card.set_id || '',
+        name: product.name || '',
+        product_type: product.product_type || '',
+        set_name: product.set_name || '',
+        quantity: product.quantity || 1,
+        purchase_price: product.purchase_price || '',
+        purchase_date: formatDateInput(product.purchase_date),
+        market_price: product.market_price || '',
+        image_url: product.image_url || '',
+        notes: product.notes || '',
       });
     }
-  }, [card]);
+  }, [product]);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) { toast.error('Card name is required'); return; }
+    if (!form.name.trim()) { toast.error('Product name is required'); return; }
     setSaving(true);
     try {
       await onSave({
@@ -60,16 +64,15 @@ export default function CardForm({ card, onSave, onClose }) {
       <div className="modal-content">
         <div className="modal-header">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">{card ? 'Edit Card' : 'Add Card'}</h2>
+            <h2 className="text-lg font-bold text-gray-900">{product ? 'Edit Product' : 'Add Sealed Product'}</h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              {card ? 'Update card details' : 'Add a new card to your collection'}
+              {product ? 'Update product details' : 'Add a sealed product to your inventory'}
             </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none">✕</button>
         </div>
 
         <div className="modal-body">
-          {/* TCG Image Preview */}
           {form.image_url && (
             <div className="flex justify-center mb-4">
               <img src={form.image_url} alt={form.name} className="h-40 object-contain rounded-lg shadow-md" />
@@ -79,41 +82,35 @@ export default function CardForm({ card, onSave, onClose }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name */}
             <div>
-              <label className="label">Card Name *</label>
+              <label className="label">Product Name *</label>
               <input
                 className="input"
                 value={form.name}
                 onChange={e => set('name', e.target.value)}
-                placeholder="e.g. Charizard"
+                placeholder="e.g. Prismatic Evolutions Elite Trainer Box"
                 required
               />
             </div>
 
-            {/* Set + Number */}
+            {/* Type + Set */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Set Name</label>
-                <input className="input" value={form.set_name} onChange={e => set('set_name', e.target.value)} placeholder="e.g. Base Set" />
-              </div>
-              <div>
-                <label className="label">Card Number</label>
-                <input className="input" value={form.card_number} onChange={e => set('card_number', e.target.value)} placeholder="e.g. 4/102" />
-              </div>
-            </div>
-
-            {/* Condition + Quantity */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Condition</label>
-                <select className="input" value={form.condition} onChange={e => set('condition', e.target.value)}>
-                  <option value="">Select condition</option>
-                  {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                <label className="label">Product Type</label>
+                <select className="input" value={form.product_type} onChange={e => set('product_type', e.target.value)}>
+                  <option value="">Select type</option>
+                  {PRODUCT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
-                <label className="label">Quantity</label>
-                <input className="input" type="number" min="1" value={form.quantity} onChange={e => set('quantity', e.target.value)} />
+                <label className="label">Set / Series</label>
+                <input className="input" value={form.set_name} onChange={e => set('set_name', e.target.value)} placeholder="e.g. Scarlet & Violet" />
               </div>
+            </div>
+
+            {/* Quantity */}
+            <div>
+              <label className="label">Quantity</label>
+              <input className="input" type="number" min="1" value={form.quantity} onChange={e => set('quantity', e.target.value)} />
             </div>
 
             {/* Prices */}
@@ -134,23 +131,23 @@ export default function CardForm({ card, onSave, onClose }) {
               <input className="input" type="date" value={form.purchase_date} onChange={e => set('purchase_date', e.target.value)} />
             </div>
 
-            {/* Notes */}
-            <div>
-              <label className="label">Notes</label>
-              <textarea className="input" rows={3} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Any additional notes…" />
-            </div>
-
             {/* Image URL */}
             <div>
               <label className="label">Image URL</label>
               <input className="input text-xs" value={form.image_url} onChange={e => set('image_url', e.target.value)} placeholder="https://…" />
             </div>
 
+            {/* Notes */}
+            <div>
+              <label className="label">Notes</label>
+              <textarea className="input" rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Any additional notes…" />
+            </div>
+
             {/* Actions */}
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
               <button type="submit" disabled={saving} className="btn-primary flex-1">
-                {saving ? <><span className="spinner mr-2" style={{ borderTopColor: 'white', borderColor: 'rgba(255,255,255,0.3)' }} />Saving…</> : card ? 'Save Changes' : 'Add Card'}
+                {saving ? <><span className="spinner mr-2" style={{ borderTopColor: 'white', borderColor: 'rgba(255,255,255,0.3)' }} />Saving…</> : product ? 'Save Changes' : 'Add Product'}
               </button>
             </div>
           </form>

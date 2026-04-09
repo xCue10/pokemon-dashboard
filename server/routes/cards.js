@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { query } = require('../db');
-const { fetchCardPrice } = require('./pokemon');
 
 // GET /api/cards
 router.get('/', async (req, res, next) => {
@@ -123,32 +122,6 @@ router.delete('/:id', async (req, res, next) => {
     const result = await query('DELETE FROM cards WHERE id=$1 RETURNING id', [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ error: 'Card not found' });
     res.json({ deleted: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// POST /api/cards/:id/refresh-price
-router.post('/:id/refresh-price', async (req, res, next) => {
-  try {
-    const cardResult = await query('SELECT * FROM cards WHERE id=$1', [req.params.id]);
-    if (!cardResult.rows.length) return res.status(404).json({ error: 'Card not found' });
-
-    const card = cardResult.rows[0];
-    if (!card.pokemon_tcg_id) {
-      return res.status(400).json({ error: 'No Pokemon TCG ID linked to this card' });
-    }
-
-    const priceData = await fetchCardPrice(card.pokemon_tcg_id);
-    if (!priceData) return res.status(502).json({ error: 'Could not fetch price from Pokemon TCG API' });
-
-    const updated = await query(
-      `UPDATE cards SET market_price=$1, image_url=COALESCE($2, image_url), last_price_update=NOW(), updated_at=NOW()
-       WHERE id=$3 RETURNING *`,
-      [priceData.market_price, priceData.image_url, req.params.id]
-    );
-
-    res.json(updated.rows[0]);
   } catch (err) {
     next(err);
   }

@@ -2,7 +2,9 @@ import { NavLink } from 'react-router-dom';
 
 const links = [
   { to: '/dashboard', label: 'Dashboard' },
-  { to: '/collection', label: 'Collection' },
+  { to: '/collection', label: 'Cards' },
+  { to: '/sealed', label: 'Sealed' },
+  { to: '/wishlist', label: 'Wishlist' },
   { to: '/ebay', label: 'eBay Tracker' },
 ];
 

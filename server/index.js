@@ -8,7 +8,8 @@ const migrate = require('./db/migrate');
 const cardsRouter = require('./routes/cards');
 const ebayRouter = require('./routes/ebay');
 const dashboardRouter = require('./routes/dashboard');
-const pokemonRouter = require('./routes/pokemon');
+const sealedRouter = require('./routes/sealed');
+const wishlistRouter = require('./routes/wishlist');
 const importRouter = require('./routes/import');
 
 const app = express();
@@ -24,7 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/cards', cardsRouter);
 app.use('/api/ebay', ebayRouter);
 app.use('/api/dashboard', dashboardRouter);
-app.use('/api/pokemon', pokemonRouter);
+app.use('/api/sealed', sealedRouter);
+app.use('/api/wishlist', wishlistRouter);
 app.use('/api/import', importRouter);
 app.use('/api/export', importRouter);
 

@@ -53,6 +53,41 @@ async function migrate() {
     )
   `);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS sealed_products (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      product_type VARCHAR(100),
+      set_name VARCHAR(255),
+      quantity INTEGER DEFAULT 1,
+      purchase_price DECIMAL(10,2),
+      purchase_date DATE,
+      market_price DECIMAL(10,2),
+      image_url TEXT,
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS wishlist (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      set_name VARCHAR(255),
+      card_number VARCHAR(50),
+      condition VARCHAR(50),
+      quantity INTEGER DEFAULT 1,
+      target_price DECIMAL(10,2),
+      market_price DECIMAL(10,2),
+      image_url TEXT,
+      notes TEXT,
+      priority VARCHAR(10) DEFAULT 'medium',
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   // Default settings
   await query(`
     INSERT INTO settings (key, value) VALUES
