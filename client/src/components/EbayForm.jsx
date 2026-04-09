@@ -174,7 +174,7 @@ export default function EbayForm({ listing, onSave, onClose }) {
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <div>
                   <label className="label">Fee Rate (e.g. 0.1325)</label>
-                  <input className="input" type="number" step="0.001" min="0" max="1" value={form.ebay_fee_rate} onChange={e => set('ebay_fee_rate', e.target.value)} placeholder="0.1325 (13.25%)" />
+                  <input className="input" type="number" step="any" min="0" max="1" value={form.ebay_fee_rate} onChange={e => set('ebay_fee_rate', e.target.value)} placeholder="0.1325 (13.25%)" />
                 </div>
                 <div>
                   <label className="label">Fixed Fee ($)</label>
