@@ -6,7 +6,7 @@ const { query } = require('../db');
 router.get('/stats', async (req, res, next) => {
   try {
     const [collectionStats, ebayStats, bestWorst, recentSales] = await Promise.all([
-      // Collection totals
+      // Collection totals (cards + sealed products combined)
       query(`
         SELECT
           COUNT(*) AS total_cards,
@@ -14,7 +14,11 @@ router.get('/stats', async (req, res, next) => {
           COALESCE(SUM(purchase_price * quantity), 0) AS total_invested,
           COALESCE(SUM(market_price * quantity), 0) AS total_market_value,
           COALESCE(SUM((market_price - purchase_price) * quantity), 0) AS unrealized_profit
-        FROM cards
+        FROM (
+          SELECT quantity, purchase_price, market_price FROM cards
+          UNION ALL
+          SELECT quantity, purchase_price, market_price FROM sealed_products
+        ) AS combined
       `),
       // eBay totals
       query(`
@@ -95,12 +99,16 @@ router.get('/stats', async (req, res, next) => {
 router.get('/charts', async (req, res, next) => {
   try {
     const [bySet, priceComparison, monthlySales] = await Promise.all([
-      // Portfolio value by set
+      // Portfolio value by set (cards + sealed)
       query(`
         SELECT set_name,
           ROUND(SUM(market_price * quantity)::numeric, 2) AS market_value,
           ROUND(SUM(purchase_price * quantity)::numeric, 2) AS invested
-        FROM cards
+        FROM (
+          SELECT set_name, market_price, purchase_price, quantity FROM cards
+          UNION ALL
+          SELECT set_name, market_price, purchase_price, quantity FROM sealed_products
+        ) AS combined
         WHERE set_name IS NOT NULL
         GROUP BY set_name
         ORDER BY market_value DESC

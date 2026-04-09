@@ -75,7 +75,7 @@ export default function Dashboard() {
         <StatCard
           title="Collection Value"
           value={formatCurrency(collection.total_market_value)}
-          subtitle={`${collection.total_quantity} cards across ${collection.total_cards} entries`}
+          subtitle={`${collection.total_quantity} items across ${collection.total_cards} entries`}
           icon="💎"
           color="red"
         />
