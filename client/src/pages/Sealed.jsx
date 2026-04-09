@@ -147,9 +147,15 @@ export default function Sealed() {
                     {label}{sortIcon(field)}
                   </th>
                 ))}
-                <th className="table-th">Market $</th>
-                <th className="table-th">P/L</th>
-                <th className="table-th">ROI</th>
+                <th className="table-th cursor-pointer" onClick={() => handleSort('total_market_value')}>
+                  Market ${sortIcon('total_market_value')}
+                </th>
+                <th className="table-th cursor-pointer" onClick={() => handleSort('unrealized_profit')}>
+                  P/L{sortIcon('unrealized_profit')}
+                </th>
+                <th className="table-th cursor-pointer" onClick={() => handleSort('roi_pct')}>
+                  ROI{sortIcon('roi_pct')}
+                </th>
                 <th className="table-th w-24">Actions</th>
               </tr>
             </thead>

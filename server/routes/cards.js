@@ -25,7 +25,7 @@ router.get('/', async (req, res, next) => {
     }
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const allowedSorts = ['name', 'set_name', 'purchase_price', 'market_price', 'purchase_date', 'created_at', 'quantity'];
+    const allowedSorts = ['name', 'set_name', 'card_number', 'purchase_price', 'market_price', 'purchase_date', 'created_at', 'quantity', 'total_market_value', 'unrealized_profit', 'roi_pct'];
     const sortCol = allowedSorts.includes(sort) ? sort : 'created_at';
     const sortDir = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 

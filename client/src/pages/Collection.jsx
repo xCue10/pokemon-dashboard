@@ -155,14 +155,20 @@ export default function Collection() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 {Object.entries(SORT_FIELDS).map(([field, label]) => (
-                  <th key={field} className="table-th" onClick={() => handleSort(field)}>
+                  <th key={field} className="table-th cursor-pointer" onClick={() => handleSort(field)}>
                     {label}{sortIcon(field)}
                   </th>
                 ))}
                 <th className="table-th">Condition</th>
-                <th className="table-th">Market $</th>
-                <th className="table-th">P/L</th>
-                <th className="table-th">ROI</th>
+                <th className="table-th cursor-pointer" onClick={() => handleSort('total_market_value')}>
+                  Market ${sortIcon('total_market_value')}
+                </th>
+                <th className="table-th cursor-pointer" onClick={() => handleSort('unrealized_profit')}>
+                  P/L{sortIcon('unrealized_profit')}
+                </th>
+                <th className="table-th cursor-pointer" onClick={() => handleSort('roi_pct')}>
+                  ROI{sortIcon('roi_pct')}
+                </th>
                 <th className="table-th w-32">Actions</th>
               </tr>
             </thead>
