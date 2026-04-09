@@ -24,6 +24,11 @@ async function migrate() {
     )
   `);
 
+  // Add card_name column to ebay_listings if it doesn't exist yet
+  await query(`
+    ALTER TABLE ebay_listings ADD COLUMN IF NOT EXISTS card_name VARCHAR(255)
+  `);
+
   await query(`
     CREATE TABLE IF NOT EXISTS ebay_listings (
       id SERIAL PRIMARY KEY,

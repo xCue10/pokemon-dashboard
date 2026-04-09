@@ -119,12 +119,12 @@ router.post('/ebay-orders', upload.single('file'), async (req, res, next) => {
 
       await query(
         `INSERT INTO ebay_listings
-          (listing_price, listing_date, status, sold_price, sold_date,
+          (card_name, listing_price, listing_date, status, sold_price, sold_date,
            ebay_fee_rate, ebay_fee_fixed, ebay_fees_total, shipping_cost,
-           net_profit, listing_url, notes)
-         VALUES ($1,$2,'sold',$3,$4,$5,$6,$7,0,$8,$9,$10)`,
-        [soldPrice, saleDate, soldPrice, saleDate,
-         FEE_RATE, FEE_FIXED, feesTotal, netProfit, listingUrl, title]
+           net_profit, listing_url)
+         VALUES ($1,$2,$3,'sold',$4,$5,$6,$7,$8,0,$9,$10)`,
+        [title, soldPrice, saleDate, soldPrice, saleDate,
+         FEE_RATE, FEE_FIXED, feesTotal, netProfit, listingUrl]
       );
       imported++;
     }

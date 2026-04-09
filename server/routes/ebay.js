@@ -31,7 +31,7 @@ router.get('/', async (req, res, next) => {
     const sortDir = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     const result = await query(
-      `SELECT e.*, c.name AS card_name, c.set_name, c.image_url, c.condition AS card_condition
+      `SELECT e.*, COALESCE(e.card_name, c.name) AS card_name, c.set_name, c.image_url, c.condition AS card_condition
        FROM ebay_listings e
        LEFT JOIN cards c ON c.id = e.card_id
        ${whereClause}
@@ -49,7 +49,7 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const {
-      card_id, listing_price, listing_date, status = 'active',
+      card_id, card_name, listing_price, listing_date, status = 'active',
       listing_url, notes,
       ebay_fee_rate, ebay_fee_fixed
     } = req.body;
@@ -68,10 +68,10 @@ router.post('/', async (req, res, next) => {
 
     const result = await query(
       `INSERT INTO ebay_listings
-        (card_id, listing_price, listing_date, status, listing_url, notes, ebay_fee_rate, ebay_fee_fixed)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+        (card_id, card_name, listing_price, listing_date, status, listing_url, notes, ebay_fee_rate, ebay_fee_fixed)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING *`,
-      [card_id || null, listing_price, listing_date || new Date(), status, listing_url, notes, feeRate, feeFixed]
+      [card_id || null, card_name || null, listing_price, listing_date || new Date(), status, listing_url, notes, feeRate, feeFixed]
     );
 
     res.status(201).json(result.rows[0]);
@@ -84,19 +84,19 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const {
-      card_id, listing_price, listing_date, status,
+      card_id, card_name, listing_price, listing_date, status,
       listing_url, notes, ebay_fee_rate, ebay_fee_fixed
     } = req.body;
 
     const result = await query(
       `UPDATE ebay_listings SET
-        card_id=$1, listing_price=$2, listing_date=$3, status=$4,
-        listing_url=$5, notes=$6,
-        ebay_fee_rate=COALESCE($7, ebay_fee_rate),
-        ebay_fee_fixed=COALESCE($8, ebay_fee_fixed),
+        card_id=$1, card_name=$2, listing_price=$3, listing_date=$4, status=$5,
+        listing_url=$6, notes=$7,
+        ebay_fee_rate=COALESCE($8, ebay_fee_rate),
+        ebay_fee_fixed=COALESCE($9, ebay_fee_fixed),
         updated_at=NOW()
-       WHERE id=$9 RETURNING *`,
-      [card_id || null, listing_price, listing_date, status,
+       WHERE id=$10 RETURNING *`,
+      [card_id || null, card_name || null, listing_price, listing_date, status,
        listing_url, notes, ebay_fee_rate, ebay_fee_fixed, req.params.id]
     );
 

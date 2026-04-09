@@ -4,7 +4,7 @@ import { formatDateInput, formatCurrency } from '../utils/format';
 import toast from 'react-hot-toast';
 
 const EMPTY = {
-  card_id: '', listing_price: '', listing_date: '', status: 'active',
+  card_id: '', card_name: '', listing_price: '', listing_date: '', status: 'active',
   listing_url: '', notes: '', ebay_fee_rate: '', ebay_fee_fixed: '',
 };
 
@@ -21,6 +21,7 @@ export default function EbayForm({ listing, onSave, onClose }) {
     if (listing) {
       setForm({
         card_id: listing.card_id || '',
+        card_name: listing.card_name || '',
         listing_price: listing.listing_price || '',
         listing_date: formatDateInput(listing.listing_date),
         status: listing.status || 'active',
@@ -68,6 +69,14 @@ export default function EbayForm({ listing, onSave, onClose }) {
 
   const selectedCard = cards.find(c => String(c.id) === String(form.card_id));
 
+  const handleCardSelect = (cardId) => {
+    set('card_id', cardId);
+    if (cardId) {
+      const card = cards.find(c => String(c.id) === cardId);
+      if (card && !form.card_name) set('card_name', card.name);
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-content">
@@ -81,10 +90,21 @@ export default function EbayForm({ listing, onSave, onClose }) {
 
         <div className="modal-body">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Card Name */}
+            <div>
+              <label className="label">Card / Item Name</label>
+              <input
+                className="input"
+                value={form.card_name}
+                onChange={e => set('card_name', e.target.value)}
+                placeholder="e.g. Charizard EX 294/217"
+              />
+            </div>
+
             {/* Card Link */}
             <div>
-              <label className="label">Linked Card (optional)</label>
-              <select className="input" value={form.card_id} onChange={e => set('card_id', e.target.value)}>
+              <label className="label">Link to Collection Card (optional)</label>
+              <select className="input" value={form.card_id} onChange={e => handleCardSelect(e.target.value)}>
                 <option value="">— No linked card —</option>
                 {cards.map(c => (
                   <option key={c.id} value={c.id}>
