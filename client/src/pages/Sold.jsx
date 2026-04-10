@@ -51,7 +51,7 @@ export default function Sold() {
   const totalSold = items.length;
   const totalRevenue = items.reduce((s, i) => s + (parseFloat(i.sold_price) || 0), 0);
   const totalPaid = items.reduce((s, i) => s + (parseFloat(i.purchase_price) || 0), 0);
-  const totalNet = items.reduce((s, i) => s + (parseFloat(i.net_profit) ?? (parseFloat(i.sold_price) - parseFloat(i.purchase_price)) || 0), 0);
+  const totalNet = items.reduce((s, i) => s + (parseFloat(i.net_profit) ?? ((parseFloat(i.sold_price) - parseFloat(i.purchase_price)) || 0)), 0);
 
   return (
     <div className="space-y-4">
