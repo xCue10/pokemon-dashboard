@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getDashboardStats, getDashboardCharts, updateSettings, postSnapshot, getValueHistory } from '../utils/api';
 import { formatCurrency, formatPct, formatDate, profitClass } from '../utils/format';
 import StatCard from '../components/StatCard';
+import { useCountUp } from '../hooks/useCountUp';
+import confetti from 'canvas-confetti';
 import PokeBallSpinner from '../components/PokeBallSpinner';
 import PortfolioBySet from '../components/charts/PortfolioBySet';
 import PriceComparison from '../components/charts/PriceComparison';
@@ -62,6 +64,24 @@ export default function Dashboard() {
 
   const { collection, ebay, best_performers, worst_performers, recent_sales } = stats;
 
+  // Confetti on profit milestones (once per milestone, tracked in localStorage)
+  const MILESTONES = [1, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000];
+  const profit = parseFloat(ebay.total_realized_profit) || 0;
+  const lastMilestone = parseFloat(localStorage.getItem('confetti_milestone') || '0');
+  const newMilestone = MILESTONES.filter(m => profit >= m && m > lastMilestone).pop();
+  if (newMilestone) {
+    localStorage.setItem('confetti_milestone', String(newMilestone));
+    setTimeout(() => {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.55 },
+        colors: ['#CC0000', '#FFCB05', '#3D5A80', '#ffffff', '#ff6b6b'],
+        scalar: 1.1,
+      });
+    }, 600);
+  }
+
   // Reusable inline Pokéball for floating bg
   const FloatBall = ({ cls, style }) => (
     <svg viewBox="0 0 100 100" aria-hidden="true" className={`absolute pointer-events-none select-none ${cls}`} style={style}>
@@ -99,21 +119,24 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Collection Value"
-          value={formatCurrency(collection.total_market_value)}
+          rawValue={parseFloat(collection.total_market_value) || 0}
+          formatter={formatCurrency}
           subtitle={`${collection.total_quantity} items across ${collection.total_cards} entries`}
           icon="💎"
           color="red"
         />
         <StatCard
           title="Total Invested"
-          value={formatCurrency(collection.total_invested)}
+          rawValue={parseFloat(collection.total_invested) || 0}
+          formatter={formatCurrency}
           subtitle="Sum of purchase prices"
           icon="💰"
           color="yellow"
         />
         <StatCard
           title="Unrealized ROI"
-          value={formatPct(collection.unrealized_roi_pct)}
+          rawValue={parseFloat(collection.unrealized_roi_pct) || 0}
+          formatter={formatPct}
           subtitle={`${formatCurrency(collection.unrealized_profit)} unrealized gain`}
           icon="📈"
           color={collection.unrealized_roi_pct >= 0 ? 'green' : 'red'}
@@ -121,7 +144,8 @@ export default function Dashboard() {
         />
         <StatCard
           title="Realized Profit"
-          value={formatCurrency(ebay.total_realized_profit)}
+          rawValue={parseFloat(ebay.total_realized_profit) || 0}
+          formatter={formatCurrency}
           subtitle={`${ebay.total_sold} eBay sales`}
           icon="🏷️"
           color="blue"
@@ -129,24 +153,8 @@ export default function Dashboard() {
       </div>
 
       {/* Secondary stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card text-center">
-          <p className="text-3xl font-bold text-pokemon-red">{collection.total_cards}</p>
-          <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Unique Cards</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-3xl font-bold text-pokemon-blue">{ebay.active_listings}</p>
-          <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Active Listings</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-3xl font-bold text-green-600">{ebay.total_sold}</p>
-          <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Items Sold</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-3xl font-bold text-yellow-600">{formatCurrency(ebay.total_fees)}</p>
-          <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">eBay Fees Paid</p>
-        </div>
-      </div>
+      <SecondaryStats collection={collection} ebay={ebay} />
+
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -230,6 +238,40 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SecondaryStats({ collection, ebay }) {
+  const cards = useCountUp(collection.total_cards, 900);
+  const active = useCountUp(ebay.active_listings, 900);
+  const sold = useCountUp(ebay.total_sold, 900);
+  const fees = useCountUp(parseFloat(ebay.total_fees) || 0, 1000);
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="card text-center">
+        <p className="text-3xl font-bold text-pokemon-red">{Math.round(cards)}</p>
+        <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Unique Cards</p>
+      </div>
+      <div className="card text-center relative">
+        {ebay.active_listings > 0 && (
+          <span className="absolute top-3 right-3 flex h-2.5 w-2.5" title="Live listings">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+          </span>
+        )}
+        <p className="text-3xl font-bold text-pokemon-blue">{Math.round(active)}</p>
+        <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Active Listings</p>
+      </div>
+      <div className="card text-center">
+        <p className="text-3xl font-bold text-green-600">{Math.round(sold)}</p>
+        <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Items Sold</p>
+      </div>
+      <div className="card text-center">
+        <p className="text-3xl font-bold text-yellow-600">{formatCurrency(fees)}</p>
+        <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">eBay Fees Paid</p>
+      </div>
     </div>
   );
 }

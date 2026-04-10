@@ -5,6 +5,7 @@ import EbayForm from '../components/EbayForm';
 import SoldForm from '../components/SoldForm';
 import PokeBallSpinner from '../components/PokeBallSpinner';
 import EmptyPokeBall from '../components/EmptyPokeBall';
+import TableSkeleton from '../components/TableSkeleton';
 import toast from 'react-hot-toast';
 
 export default function EbayTracker() {
@@ -196,12 +197,7 @@ export default function EbayTracker() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={11}>
-                  <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
-                    <PokeBallSpinner size={44} />
-                    <span className="text-sm">Loading…</span>
-                  </div>
-                </td></tr>
+                <TableSkeleton cols={11} rows={5} />
               ) : listings.length === 0 ? (
                 <tr><td colSpan={11}>
                   <EmptyPokeBall message="No listings yet" sub="Click + New Listing to track an eBay sale" />

@@ -6,6 +6,7 @@ import CSVImport from '../components/CSVImport';
 import SoldForm from '../components/SoldForm';
 import PokeBallSpinner from '../components/PokeBallSpinner';
 import EmptyPokeBall from '../components/EmptyPokeBall';
+import TableSkeleton from '../components/TableSkeleton';
 import { catchToast } from '../utils/catchToast';
 import toast from 'react-hot-toast';
 
@@ -249,12 +250,7 @@ export default function Collection() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={12}>
-                  <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
-                    <PokeBallSpinner size={44} />
-                    <span className="text-sm">Loading…</span>
-                  </div>
-                </td></tr>
+                <TableSkeleton cols={12} rows={6} />
               ) : cards.length === 0 ? (
                 <tr><td colSpan={12}>
                   <EmptyPokeBall

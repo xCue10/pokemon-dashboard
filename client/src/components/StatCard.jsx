@@ -1,4 +1,9 @@
-export default function StatCard({ title, value, subtitle, icon, color = 'red', trend }) {
+import { useCountUp } from '../hooks/useCountUp';
+
+export default function StatCard({ title, value, subtitle, icon, color = 'red', trend, rawValue, formatter }) {
+  const animated = useCountUp(rawValue ?? 0);
+  const displayValue = rawValue != null && formatter ? formatter(animated) : value;
+
   const colorMap = {
     red: 'bg-red-50 text-pokemon-red border-red-100',
     green: 'bg-green-50 text-green-700 border-green-100',
@@ -25,7 +30,7 @@ export default function StatCard({ title, value, subtitle, icon, color = 'red', 
       )}
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1">{title}</p>
-        <p className="text-2xl font-bold leading-none mb-1">{value}</p>
+        <p className="text-2xl font-bold leading-none mb-1">{displayValue}</p>
         {subtitle && <p className="text-xs opacity-70">{subtitle}</p>}
         {trend != null && (
           <p className={`text-xs font-semibold mt-1 ${parseFloat(trend) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
