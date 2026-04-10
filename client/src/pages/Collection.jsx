@@ -167,15 +167,15 @@ export default function Collection() {
           <p className="text-sm text-gray-500">{cards.length} card{cards.length !== 1 ? 's' : ''} &nbsp;·&nbsp; {formatCurrency(totalMarket)} market value</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setShowImport(true)} className="btn-secondary text-sm">📥 Import CSV</button>
-          <button onClick={exportCards} className="btn-secondary text-sm">📤 Export CSV</button>
+          <button onClick={() => setShowImport(true)} className="btn-secondary text-sm hidden sm:inline-flex">📥 Import CSV</button>
+          <button onClick={exportCards} className="btn-secondary text-sm hidden sm:inline-flex">📤 Export CSV</button>
           <button onClick={openAdd} className="btn-primary text-sm">+ Add Card</button>
         </div>
       </div>
 
-      {/* Summary bar */}
+      {/* Summary bar — desktop only */}
       {cards.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="hidden sm:grid grid-cols-3 gap-3">
           <div className="card py-3 text-center">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Invested</p>
             <p className="text-xl font-bold text-gray-800">{formatCurrency(totalInvested)}</p>
@@ -193,9 +193,10 @@ export default function Collection() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* Search bar (shared mobile + desktop) */}
       <div className="card p-4">
-        <div className="flex flex-wrap gap-3">
+        {/* Desktop filters */}
+        <div className="hidden sm:flex flex-wrap gap-3">
           <input
             className="input w-48"
             placeholder="🔍 Search name or set…"
@@ -213,10 +214,78 @@ export default function Collection() {
           </select>
           <button onClick={load} className="btn-secondary text-sm px-3">↻</button>
         </div>
+        {/* Mobile search only */}
+        <div className="flex sm:hidden gap-2">
+          <input
+            className="input flex-1"
+            placeholder="🔍 Search name or set…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <button onClick={load} className="btn-secondary text-sm px-3">↻</button>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="card p-0 overflow-hidden">
+      {/* ── MOBILE card list (dupe-check view) ── */}
+      <div className="sm:hidden space-y-2">
+        {loading ? (
+          <div className="card flex flex-col items-center justify-center py-12 gap-3 text-gray-400">
+            <PokeBallSpinner size={40} />
+            <span className="text-sm">Loading…</span>
+          </div>
+        ) : cards.length === 0 ? (
+          <EmptyPokeBall
+            message="No cards yet"
+            sub={<>Tap <strong>+ Add Card</strong> to start your collection</>}
+          />
+        ) : (
+          displayedCards.map(card => {
+            const isHot = roiThreshold > 0 && parseFloat(card.roi_pct) >= roiThreshold;
+            return (
+              <div key={card.id} className="card flex items-center gap-3 py-3 px-4">
+                {/* Qty badge */}
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pokemon-red flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">{card.quantity}</span>
+                </div>
+
+                {/* Main info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-semibold text-gray-900 truncate text-sm leading-tight">{card.name}</p>
+                    {isHot && <span className="text-xs bg-green-100 text-green-700 border border-green-200 rounded px-1 font-medium flex-shrink-0 hot-glow">🔥</span>}
+                  </div>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                    {[card.set_name, card.card_number].filter(Boolean).join(' · ') || '—'}
+                  </p>
+                </div>
+
+                {/* Condition badge */}
+                <div className="flex-shrink-0">
+                  {card.condition ? (
+                    <span className={conditionBadgeClass(card.condition)}>{card.condition}</span>
+                  ) : (
+                    <span className="text-gray-300 text-xs">—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+
+        {/* Mobile pagination */}
+        {!loading && cards.length > 0 && pageSize !== 'all' && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 pt-1">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-sm disabled:opacity-30 dark:bg-gray-800 dark:border-gray-700">← Prev</button>
+            <span className="text-sm text-gray-500">{page} / {totalPages}</span>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-sm disabled:opacity-30 dark:bg-gray-800 dark:border-gray-700">Next →</button>
+          </div>
+        )}
+      </div>
+
+      {/* ── DESKTOP table ── */}
+      <div className="hidden sm:block card p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -362,9 +431,9 @@ export default function Collection() {
         )}
       </div>
 
-      {/* Bulk action bar */}
+      {/* Bulk action bar — desktop only (no bulk select on mobile) */}
       {selected.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white rounded-2xl shadow-2xl px-6 py-3 flex items-center gap-4">
+        <div className="hidden sm:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white rounded-2xl shadow-2xl px-6 py-3 items-center gap-4">
           <span className="text-sm font-medium">{selected.size} card{selected.size !== 1 ? 's' : ''} selected</span>
           <button onClick={() => setSelected(new Set())} className="text-xs text-gray-400 hover:text-white transition-colors">Clear</button>
           <button

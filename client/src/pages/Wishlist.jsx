@@ -171,62 +171,72 @@ export default function Wishlist() {
               <h2 className={`text-sm font-bold uppercase tracking-wider mb-3 ${group.color}`}>{group.label}</h2>
               <div className="space-y-2">
                 {group.items.map(item => (
-                  <div key={item.id} className="card flex items-center gap-4">
-                    {/* Image */}
-                    <div className="flex-shrink-0">
-                      {item.image_url ? (
-                        <img src={item.image_url} alt={item.name} className="h-16 w-12 object-contain rounded shadow-sm" />
-                      ) : (
-                        <div className="h-16 w-12 bg-gray-100 rounded flex items-center justify-center text-lg">🃏</div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-gray-900 truncate">{item.name}</p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${priorityBadge(item.priority)}`}>
-                          {item.priority}
-                        </span>
+                  <div key={item.id} className="card p-3 sm:p-6">
+                    <div className="flex items-center gap-3">
+                      {/* Image */}
+                      <div className="flex-shrink-0">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="h-16 w-12 object-contain rounded shadow-sm" />
+                        ) : (
+                          <div className="h-16 w-12 bg-gray-100 rounded flex items-center justify-center text-lg">🃏</div>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-500 truncate">
-                        {[item.set_name, item.card_number, item.condition].filter(Boolean).join(' · ')}
-                      </p>
-                      {item.notes && <p className="text-xs text-gray-400 truncate mt-0.5">{item.notes}</p>}
-                    </div>
 
-                    {/* Prices */}
-                    <div className="flex-shrink-0 text-right hidden sm:block">
-                      {item.target_price && (
-                        <p className="text-sm font-semibold text-gray-800">
-                          Target: {formatCurrency(item.target_price)}
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">{item.name}</p>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${priorityBadge(item.priority)}`}>
+                            {item.priority}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-gray-500 truncate mt-0.5">
+                          {[item.set_name, item.card_number, item.condition].filter(Boolean).join(' · ')}
                         </p>
-                      )}
-                      {item.market_price && (
-                        <p className="text-xs text-gray-400">Market: {formatCurrency(item.market_price)}</p>
-                      )}
-                      <p className="text-xs text-gray-300 mt-0.5">Added {formatDate(item.created_at)}</p>
-                    </div>
+                        {/* Prices — shown inline on mobile, separate column on desktop */}
+                        {(item.target_price || item.market_price) && (
+                          <p className="text-xs text-gray-500 mt-0.5 sm:hidden">
+                            {item.target_price && <span className="font-medium">Target: {formatCurrency(item.target_price)}</span>}
+                            {item.target_price && item.market_price && ' · '}
+                            {item.market_price && <span>Mkt: {formatCurrency(item.market_price)}</span>}
+                          </p>
+                        )}
+                        {item.notes && <p className="text-xs text-gray-400 truncate mt-0.5">{item.notes}</p>}
+                      </div>
 
-                    {/* Actions */}
-                    <div className="flex-shrink-0 flex items-center gap-1">
-                      <button
-                        onClick={() => openPurchase(item)}
-                        className="px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 text-sm font-medium border border-green-200 transition-colors whitespace-nowrap"
-                        title="Mark as purchased"
-                      >
-                        ✓ Bought
-                      </button>
-                      <button
-                        onClick={() => openEdit(item)}
-                        className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors"
-                        title="Edit"
-                      >✏️</button>
-                      <button
-                        onClick={() => setDeleteConfirm(item)}
-                        className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
-                        title="Remove"
-                      >🗑️</button>
+                      {/* Prices — desktop only separate column */}
+                      <div className="flex-shrink-0 text-right hidden sm:block">
+                        {item.target_price && (
+                          <p className="text-sm font-semibold text-gray-800">
+                            Target: {formatCurrency(item.target_price)}
+                          </p>
+                        )}
+                        {item.market_price && (
+                          <p className="text-xs text-gray-400">Market: {formatCurrency(item.market_price)}</p>
+                        )}
+                        <p className="text-xs text-gray-300 mt-0.5">Added {formatDate(item.created_at)}</p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        <button
+                          onClick={() => openPurchase(item)}
+                          className="px-2 py-1.5 sm:px-3 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 text-xs sm:text-sm font-medium border border-green-200 transition-colors whitespace-nowrap"
+                          title="Mark as purchased"
+                        >
+                          ✓ Bought
+                        </button>
+                        <button
+                          onClick={() => openEdit(item)}
+                          className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors"
+                          title="Edit"
+                        >✏️</button>
+                        <button
+                          onClick={() => setDeleteConfirm(item)}
+                          className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+                          title="Remove"
+                        >🗑️</button>
+                      </div>
                     </div>
                   </div>
                 ))}
