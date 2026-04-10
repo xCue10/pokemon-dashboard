@@ -3,6 +3,8 @@ import { getEbayListings, createEbayListing, updateEbayListing, markEbaySold, de
 import { formatCurrency, formatDate, profitClass, statusBadgeClass } from '../utils/format';
 import EbayForm from '../components/EbayForm';
 import SoldForm from '../components/SoldForm';
+import PokeBallSpinner from '../components/PokeBallSpinner';
+import EmptyPokeBall from '../components/EmptyPokeBall';
 import toast from 'react-hot-toast';
 
 export default function EbayTracker() {
@@ -194,14 +196,15 @@ export default function EbayTracker() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={11} className="text-center py-12 text-gray-400">
-                  <div className="spinner mx-auto mb-2" />Loading…
+                <tr><td colSpan={11}>
+                  <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
+                    <PokeBallSpinner size={44} />
+                    <span className="text-sm">Loading…</span>
+                  </div>
                 </td></tr>
               ) : listings.length === 0 ? (
-                <tr><td colSpan={11} className="text-center py-16 text-gray-400">
-                  <p className="text-4xl mb-3">🏷️</p>
-                  <p className="font-medium">No listings yet</p>
-                  <p className="text-sm mt-1">Click <strong>+ New Listing</strong> to track an eBay sale</p>
+                <tr><td colSpan={11}>
+                  <EmptyPokeBall message="No listings yet" sub="Click + New Listing to track an eBay sale" />
                 </td></tr>
               ) : listings.map(listing => (
                 <tr key={listing.id} className="table-row-hover">

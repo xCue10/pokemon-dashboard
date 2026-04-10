@@ -16,7 +16,8 @@ export default function StatCard({ title, value, subtitle, icon, color = 'red', 
   };
 
   return (
-    <div className={`card border ${colorMap[color] || colorMap.red} flex items-start gap-4`}>
+    <div className={`card border ${colorMap[color] || colorMap.red} flex items-start gap-4 relative overflow-hidden`}>
+      <div className="shimmer-once absolute inset-0 pointer-events-none" aria-hidden="true" />
       {icon && (
         <div className={`${iconBg[color] || iconBg.red} text-white w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg`}>
           {icon}

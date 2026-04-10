@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { getWishlist, createWishlistItem, updateWishlistItem, deleteWishlistItem, purchaseWishlistItem } from '../utils/api';
 import { formatCurrency, formatDate, formatDateInput } from '../utils/format';
 import WishlistForm from '../components/WishlistForm';
+import PokeBallSpinner from '../components/PokeBallSpinner';
+import EmptyPokeBall from '../components/EmptyPokeBall';
 import toast from 'react-hot-toast';
 
 const CONDITIONS = [
@@ -152,15 +154,12 @@ export default function Wishlist() {
 
       {/* List */}
       {loading ? (
-        <div className="card flex items-center justify-center py-16">
-          <div className="spinner w-8 h-8 border-4 mx-auto" />
+        <div className="card flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
+          <PokeBallSpinner size={44} />
+          <span className="text-sm">Loading…</span>
         </div>
       ) : items.length === 0 ? (
-        <div className="card text-center py-16 text-gray-400">
-          <p className="text-4xl mb-3">⭐</p>
-          <p className="font-medium">Your wishlist is empty</p>
-          <p className="text-sm mt-1">Click <strong>+ Add to Wishlist</strong> to start tracking cards you want</p>
-        </div>
+        <EmptyPokeBall message="Your wishlist is empty" sub="Click + Add to Wishlist to start tracking cards you want" />
       ) : (
         <div className="space-y-6">
           {[

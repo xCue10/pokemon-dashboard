@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSoldItems, restoreCard, restoreSealed } from '../utils/api';
 import { formatCurrency, formatDate, profitClass } from '../utils/format';
+import PokeBallSpinner from '../components/PokeBallSpinner';
+import EmptyPokeBall from '../components/EmptyPokeBall';
 import toast from 'react-hot-toast';
 
 export default function Sold() {
@@ -127,16 +129,18 @@ export default function Sold() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={12} className="text-center py-12 text-gray-400">
-                  <div className="spinner mx-auto mb-2" />Loading…
+                <tr><td colSpan={12}>
+                  <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
+                    <PokeBallSpinner size={44} />
+                    <span className="text-sm">Loading…</span>
+                  </div>
                 </td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={12} className="text-center py-16 text-gray-400">
-                  <p className="text-4xl mb-3">🏷️</p>
-                  <p className="font-medium">{items.length === 0 ? 'No sold items yet' : 'No results match your filter'}</p>
-                  <p className="text-sm mt-1">
-                    {items.length === 0 ? 'Click the 💵 button on any card or sealed product to mark it as sold' : ''}
-                  </p>
+                <tr><td colSpan={12}>
+                  <EmptyPokeBall
+                    message={items.length === 0 ? 'No sold items yet' : 'No results match your filter'}
+                    sub={items.length === 0 ? 'Click 💵 on any card or sealed product to mark it as sold' : ''}
+                  />
                 </td></tr>
               ) : filtered.map(item => {
                 const net = item.net_profit != null

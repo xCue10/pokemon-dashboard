@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getDashboardStats, getDashboardCharts, updateSettings, postSnapshot, getValueHistory } from '../utils/api';
 import { formatCurrency, formatPct, formatDate, profitClass } from '../utils/format';
 import StatCard from '../components/StatCard';
+import PokeBallSpinner from '../components/PokeBallSpinner';
 import PortfolioBySet from '../components/charts/PortfolioBySet';
 import PriceComparison from '../components/charts/PriceComparison';
 import MonthlySales from '../components/charts/MonthlySales';
@@ -10,11 +11,9 @@ import toast from 'react-hot-toast';
 
 function Loading() {
   return (
-    <div className="flex items-center justify-center py-20">
-      <div className="text-center">
-        <div className="spinner w-10 h-10 border-4 mx-auto mb-3" />
-        <p className="text-gray-400 text-sm">Loading dashboard…</p>
-      </div>
+    <div className="flex flex-col items-center justify-center py-24 gap-4">
+      <PokeBallSpinner size={56} />
+      <p className="text-gray-400 text-sm">Loading dashboard…</p>
     </div>
   );
 }
@@ -63,8 +62,27 @@ export default function Dashboard() {
 
   const { collection, ebay, best_performers, worst_performers, recent_sales } = stats;
 
+  // Reusable inline Pokéball for floating bg
+  const FloatBall = ({ cls, style }) => (
+    <svg viewBox="0 0 100 100" aria-hidden="true" className={`absolute pointer-events-none select-none ${cls}`} style={style}>
+      <circle cx="50" cy="50" r="46" fill="#CC0000" stroke="#333" strokeWidth="4" />
+      <rect x="4" y="46" width="92" height="8" fill="#333" />
+      <path d="M4 50 Q4 96 50 96 Q96 96 96 50 Z" fill="white" />
+      <circle cx="50" cy="50" r="14" fill="white" stroke="#333" strokeWidth="3" />
+      <circle cx="50" cy="50" r="7" fill="#CC0000" stroke="#333" strokeWidth="2" />
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#333" strokeWidth="4" />
+    </svg>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating decorative Pokéballs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <FloatBall cls="pb-bg-1" style={{ top: '2%',  right: '1%',  width: 110, opacity: 0.045 }} />
+        <FloatBall cls="pb-bg-2" style={{ top: '28%', right: '9%',  width: 70,  opacity: 0.032 }} />
+        <FloatBall cls="pb-bg-3" style={{ top: '62%', right: '18%', width: 48,  opacity: 0.025 }} />
+      </div>
+
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>

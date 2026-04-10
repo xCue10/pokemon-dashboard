@@ -3,6 +3,9 @@ import { getSealed, createSealed, updateSealed, deleteSealed, sellSealed } from 
 import { formatCurrency, formatPct, formatDate, profitClass } from '../utils/format';
 import SealedForm from '../components/SealedForm';
 import SoldForm from '../components/SoldForm';
+import PokeBallSpinner from '../components/PokeBallSpinner';
+import EmptyPokeBall from '../components/EmptyPokeBall';
+import { catchToast } from '../utils/catchToast';
 import toast from 'react-hot-toast';
 
 const SORT_FIELDS = {
@@ -87,7 +90,7 @@ export default function Sealed() {
   const handleSell = async (soldData) => {
     try {
       await sellSealed(sellProduct.id, soldData);
-      toast.success(`${sellProduct.name} moved to Sold!`);
+      catchToast(`${sellProduct.name} moved to Sold!`);
       setSellProduct(null);
       load();
     } catch (err) {
@@ -192,14 +195,15 @@ export default function Sealed() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={12} className="text-center py-12 text-gray-400">
-                  <div className="spinner mx-auto mb-2" />Loading…
+                <tr><td colSpan={12}>
+                  <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
+                    <PokeBallSpinner size={44} />
+                    <span className="text-sm">Loading…</span>
+                  </div>
                 </td></tr>
               ) : products.length === 0 ? (
-                <tr><td colSpan={12} className="text-center py-16 text-gray-400">
-                  <p className="text-4xl mb-3">📦</p>
-                  <p className="font-medium">No sealed products yet</p>
-                  <p className="text-sm mt-1">Click <strong>+ Add Product</strong> to get started</p>
+                <tr><td colSpan={12}>
+                  <EmptyPokeBall message="No sealed products yet" sub="Click + Add Product to get started" />
                 </td></tr>
               ) : displayedProducts.map(p => (
                 <tr key={p.id} className="table-row-hover">

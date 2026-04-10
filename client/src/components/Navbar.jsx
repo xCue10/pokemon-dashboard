@@ -19,8 +19,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-inner">
-              <svg viewBox="0 0 100 100" className="w-7 h-7">
+            <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-inner overflow-hidden">
+              <svg viewBox="0 0 100 100" className="w-7 h-7 pb-logo">
                 <circle cx="50" cy="50" r="46" fill="#CC0000"/>
                 <rect x="4" y="46" width="92" height="8" fill="#333"/>
                 <path d="M4 50 Q4 96 50 96 Q96 96 96 50 Z" fill="white"/>

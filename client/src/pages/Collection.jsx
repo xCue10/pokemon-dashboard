@@ -4,6 +4,9 @@ import { formatCurrency, formatPct, formatDate, profitClass, conditionBadgeClass
 import CardForm from '../components/CardForm';
 import CSVImport from '../components/CSVImport';
 import SoldForm from '../components/SoldForm';
+import PokeBallSpinner from '../components/PokeBallSpinner';
+import EmptyPokeBall from '../components/EmptyPokeBall';
+import { catchToast } from '../utils/catchToast';
 import toast from 'react-hot-toast';
 
 const SORT_FIELDS = {
@@ -95,7 +98,7 @@ export default function Collection() {
   const handleSell = async (soldData) => {
     try {
       await sellCard(sellCard.id, soldData);
-      toast.success(`${sellCard.name} moved to Sold!`);
+      catchToast(`${sellCard.name} moved to Sold!`);
       setSellCard(null);
       load();
     } catch (err) {
@@ -246,14 +249,18 @@ export default function Collection() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={12} className="text-center py-12 text-gray-400">
-                  <div className="spinner mx-auto mb-2" />Loading…
+                <tr><td colSpan={12}>
+                  <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
+                    <PokeBallSpinner size={44} />
+                    <span className="text-sm">Loading…</span>
+                  </div>
                 </td></tr>
               ) : cards.length === 0 ? (
-                <tr><td colSpan={12} className="text-center py-16 text-gray-400">
-                  <p className="text-4xl mb-3">🃏</p>
-                  <p className="font-medium">No cards yet</p>
-                  <p className="text-sm mt-1">Press <kbd className="bg-gray-100 px-1 rounded text-xs">N</kbd> or click <strong>+ Add Card</strong> to start your collection</p>
+                <tr><td colSpan={12}>
+                  <EmptyPokeBall
+                    message="No cards yet"
+                    sub={<>Press <kbd className="bg-gray-100 px-1 rounded text-xs">N</kbd> or click <strong>+ Add Card</strong> to start your collection</>}
+                  />
                 </td></tr>
               ) : displayedCards.map(card => {
                 const isHot = roiThreshold > 0 && parseFloat(card.roi_pct) >= roiThreshold;
@@ -265,7 +272,7 @@ export default function Collection() {
                   <td className="table-td font-medium text-gray-900 max-w-xs">
                     <div className="flex items-center gap-1">
                       <p className="truncate">{card.name}</p>
-                      {isHot && <span className="text-xs bg-green-100 text-green-700 border border-green-200 rounded px-1 font-medium flex-shrink-0">🔥 HOT</span>}
+                      {isHot && <span className="text-xs bg-green-100 text-green-700 border border-green-200 rounded px-1 font-medium flex-shrink-0 hot-glow">🔥 HOT</span>}
                       {card.notes && <span className="text-gray-400 flex-shrink-0" title={card.notes}>📝</span>}
                     </div>
                   </td>
