@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCards, createCard, updateCard, deleteCard, exportCards, bulkDeleteCards, createEbayListing } from '../utils/api';
+import { getCards, createCard, updateCard, deleteCard, exportCards, bulkDeleteCards, sellCard } from '../utils/api';
 import { formatCurrency, formatPct, formatDate, profitClass, conditionBadgeClass } from '../utils/format';
 import CardForm from '../components/CardForm';
 import CSVImport from '../components/CSVImport';
@@ -94,16 +94,10 @@ export default function Collection() {
 
   const handleSell = async (soldData) => {
     try {
-      await createEbayListing({
-        card_id: sellCard.id,
-        card_name: sellCard.name,
-        set_name: sellCard.set_name,
-        listing_price: soldData.sold_price,
-        status: 'sold',
-        ...soldData,
-      });
-      toast.success(`${sellCard.name} added to eBay tracker as sold!`);
+      await sellCard(sellCard.id, soldData);
+      toast.success(`${sellCard.name} moved to Sold!`);
       setSellCard(null);
+      load();
     } catch (err) {
       toast.error(err.message);
     }

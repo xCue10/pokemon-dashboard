@@ -11,6 +11,7 @@ const dashboardRouter = require('./routes/dashboard');
 const sealedRouter = require('./routes/sealed');
 const wishlistRouter = require('./routes/wishlist');
 const importRouter = require('./routes/import');
+const soldRouter = require('./routes/sold');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +30,7 @@ app.use('/api/sealed', sealedRouter);
 app.use('/api/wishlist', wishlistRouter);
 app.use('/api/import', importRouter);
 app.use('/api/export', importRouter);
+app.use('/api/sold', soldRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

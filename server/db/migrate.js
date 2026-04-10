@@ -106,6 +106,20 @@ async function migrate() {
   // Add set_name column to ebay_listings if it doesn't exist
   await query(`ALTER TABLE ebay_listings ADD COLUMN IF NOT EXISTS set_name VARCHAR(255)`);
 
+  // Sold tracking columns for cards
+  await query(`ALTER TABLE cards ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active'`);
+  await query(`ALTER TABLE cards ADD COLUMN IF NOT EXISTS sold_price DECIMAL(10,2)`);
+  await query(`ALTER TABLE cards ADD COLUMN IF NOT EXISTS sold_date DATE`);
+  await query(`ALTER TABLE cards ADD COLUMN IF NOT EXISTS ebay_listing_id INTEGER`);
+  await query(`UPDATE cards SET status = 'active' WHERE status IS NULL`);
+
+  // Sold tracking columns for sealed_products
+  await query(`ALTER TABLE sealed_products ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active'`);
+  await query(`ALTER TABLE sealed_products ADD COLUMN IF NOT EXISTS sold_price DECIMAL(10,2)`);
+  await query(`ALTER TABLE sealed_products ADD COLUMN IF NOT EXISTS sold_date DATE`);
+  await query(`ALTER TABLE sealed_products ADD COLUMN IF NOT EXISTS ebay_listing_id INTEGER`);
+  await query(`UPDATE sealed_products SET status = 'active' WHERE status IS NULL`);
+
   // Default settings
   await query(`
     INSERT INTO settings (key, value) VALUES

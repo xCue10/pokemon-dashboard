@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSealed, createSealed, updateSealed, deleteSealed, createEbayListing } from '../utils/api';
+import { getSealed, createSealed, updateSealed, deleteSealed, sellSealed } from '../utils/api';
 import { formatCurrency, formatPct, formatDate, profitClass } from '../utils/format';
 import SealedForm from '../components/SealedForm';
 import SoldForm from '../components/SoldForm';
@@ -86,15 +86,10 @@ export default function Sealed() {
 
   const handleSell = async (soldData) => {
     try {
-      await createEbayListing({
-        card_name: sellProduct.name,
-        set_name: sellProduct.set_name,
-        listing_price: soldData.sold_price,
-        status: 'sold',
-        ...soldData,
-      });
-      toast.success(`${sellProduct.name} added to eBay tracker as sold!`);
+      await sellSealed(sellProduct.id, soldData);
+      toast.success(`${sellProduct.name} moved to Sold!`);
       setSellProduct(null);
+      load();
     } catch (err) {
       toast.error(err.message);
     }

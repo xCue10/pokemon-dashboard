@@ -20,6 +20,8 @@ export const createCard = (data) => api.post('/cards', data).then(r => r.data);
 export const updateCard = (id, data) => api.put(`/cards/${id}`, data).then(r => r.data);
 export const deleteCard = (id) => api.delete(`/cards/${id}`).then(r => r.data);
 export const bulkDeleteCards = (ids) => api.delete('/cards/bulk', { data: { ids } }).then(r => r.data);
+export const sellCard = (id, data) => api.put(`/cards/${id}/sell`, data).then(r => r.data);
+export const restoreCard = (id) => api.put(`/cards/${id}/restore`).then(r => r.data);
 
 // eBay
 export const getEbayListings = (params = {}) => api.get('/ebay', { params }).then(r => r.data);
@@ -48,6 +50,11 @@ export const getSealed = (params = {}) => api.get('/sealed', { params }).then(r 
 export const createSealed = (data) => api.post('/sealed', data).then(r => r.data);
 export const updateSealed = (id, data) => api.put(`/sealed/${id}`, data).then(r => r.data);
 export const deleteSealed = (id) => api.delete(`/sealed/${id}`).then(r => r.data);
+export const sellSealed = (id, data) => api.put(`/sealed/${id}/sell`, data).then(r => r.data);
+export const restoreSealed = (id) => api.put(`/sealed/${id}/restore`).then(r => r.data);
+
+// Sold
+export const getSoldItems = () => api.get('/sold').then(r => r.data);
 
 // Import/Export
 export const importEbayOrders = (file) => {

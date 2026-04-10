@@ -5,6 +5,7 @@ const links = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/collection', label: 'Cards' },
   { to: '/sealed', label: 'Sealed' },
+  { to: '/sold', label: 'Sold' },
   { to: '/wishlist', label: 'Wishlist' },
   { to: '/ebay', label: 'eBay Tracker' },
 ];

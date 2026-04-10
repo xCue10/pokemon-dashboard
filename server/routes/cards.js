@@ -6,7 +6,7 @@ const { query } = require('../db');
 router.get('/', async (req, res, next) => {
   try {
     const { set, condition, sort = 'created_at', order = 'DESC', search } = req.query;
-    let conditions = [];
+    let conditions = [`COALESCE(c.status, 'active') = 'active'`];
     let params = [];
     let i = 1;
 
@@ -24,7 +24,7 @@ router.get('/', async (req, res, next) => {
       i++;
     }
 
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
     const allowedSorts = ['name', 'set_name', 'card_number', 'purchase_price', 'market_price', 'purchase_date', 'created_at', 'quantity', 'total_market_value', 'unrealized_profit', 'roi_pct'];
     const sortCol = allowedSorts.includes(sort) ? sort : 'created_at';
     const sortDir = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
@@ -109,6 +109,65 @@ router.put('/:id', async (req, res, next) => {
        pokemon_tcg_id, market_price || null, image_url, set_id, req.params.id]
     );
 
+    if (!result.rows.length) return res.status(404).json({ error: 'Card not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/cards/:id/sell — mark card as sold and create eBay listing
+router.put('/:id/sell', async (req, res, next) => {
+  try {
+    const { sold_price, sold_date, shipping_cost = 0, ebay_fee_rate, ebay_fee_fixed } = req.body;
+    if (!sold_price) return res.status(400).json({ error: 'sold_price is required' });
+
+    const cardResult = await query('SELECT * FROM cards WHERE id=$1', [req.params.id]);
+    if (!cardResult.rows.length) return res.status(404).json({ error: 'Card not found' });
+    const card = cardResult.rows[0];
+
+    let feeRate = ebay_fee_rate;
+    let feeFixed = ebay_fee_fixed;
+    if (feeRate == null || feeFixed == null) {
+      const settings = await query(`SELECT key, value FROM settings WHERE key IN ('ebay_fee_rate', 'ebay_fee_fixed')`);
+      const settingsMap = Object.fromEntries(settings.rows.map(r => [r.key, parseFloat(r.value)]));
+      feeRate = feeRate ?? settingsMap.ebay_fee_rate ?? 0.1325;
+      feeFixed = feeFixed ?? settingsMap.ebay_fee_fixed ?? 0.30;
+    }
+
+    const feesTotal = (sold_price * feeRate + parseFloat(feeFixed)).toFixed(2);
+    const netProfit = (sold_price - feesTotal - parseFloat(shipping_cost)).toFixed(2);
+    const saleDate = sold_date || new Date().toISOString().split('T')[0];
+
+    const listing = await query(
+      `INSERT INTO ebay_listings
+        (card_id, card_name, set_name, listing_price, listing_date, status,
+         ebay_fee_rate, ebay_fee_fixed, sold_price, sold_date, shipping_cost, ebay_fees_total, net_profit)
+       VALUES ($1,$2,$3,$4,$5,'sold',$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+      [card.id, card.name, card.set_name, sold_price, saleDate,
+       feeRate, feeFixed, sold_price, saleDate, shipping_cost, feesTotal, netProfit]
+    );
+
+    const updated = await query(
+      `UPDATE cards SET status='sold', sold_price=$1, sold_date=$2, ebay_listing_id=$3, updated_at=NOW()
+       WHERE id=$4 RETURNING *`,
+      [sold_price, saleDate, listing.rows[0].id, req.params.id]
+    );
+
+    res.json(updated.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/cards/:id/restore — move sold card back to active collection
+router.put('/:id/restore', async (req, res, next) => {
+  try {
+    const result = await query(
+      `UPDATE cards SET status='active', sold_price=NULL, sold_date=NULL, ebay_listing_id=NULL, updated_at=NOW()
+       WHERE id=$1 RETURNING *`,
+      [req.params.id]
+    );
     if (!result.rows.length) return res.status(404).json({ error: 'Card not found' });
     res.json(result.rows[0]);
   } catch (err) {
