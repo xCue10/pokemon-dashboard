@@ -30,7 +30,7 @@ export default function StatCard({ title, value, subtitle, icon, color = 'red', 
       )}
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1">{title}</p>
-        <p className="text-2xl font-bold leading-none mb-1">{displayValue}</p>
+        <p className="text-lg sm:text-2xl font-bold leading-none mb-1 truncate">{displayValue}</p>
         {subtitle && <p className="text-xs opacity-70">{subtitle}</p>}
         {trend != null && (
           <p className={`text-xs font-semibold mt-1 ${parseFloat(trend) >= 0 ? 'text-green-600' : 'text-red-600'}`}>

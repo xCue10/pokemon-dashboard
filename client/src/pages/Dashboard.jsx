@@ -251,7 +251,7 @@ function SecondaryStats({ collection, ebay }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="card text-center">
-        <p className="text-3xl font-bold text-pokemon-red">{Math.round(cards)}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-pokemon-red">{Math.round(cards)}</p>
         <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Unique Cards</p>
       </div>
       <div className="card text-center relative">
@@ -261,15 +261,15 @@ function SecondaryStats({ collection, ebay }) {
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
           </span>
         )}
-        <p className="text-3xl font-bold text-pokemon-blue">{Math.round(active)}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-pokemon-blue">{Math.round(active)}</p>
         <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Active Listings</p>
       </div>
       <div className="card text-center">
-        <p className="text-3xl font-bold text-green-600">{Math.round(sold)}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-green-600">{Math.round(sold)}</p>
         <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">Items Sold</p>
       </div>
       <div className="card text-center">
-        <p className="text-3xl font-bold text-yellow-600">{formatCurrency(fees)}</p>
+        <p className="text-xl sm:text-3xl font-bold text-yellow-600 truncate">{formatCurrency(fees)}</p>
         <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">eBay Fees Paid</p>
       </div>
     </div>
