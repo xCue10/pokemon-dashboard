@@ -49,9 +49,9 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const {
-      card_id, card_name, listing_price, listing_date, status = 'active',
-      listing_url, notes,
-      ebay_fee_rate, ebay_fee_fixed
+      card_id, card_name, set_name, listing_price, listing_date, status = 'active',
+      listing_url, notes, ebay_fee_rate, ebay_fee_fixed,
+      sold_price, sold_date, shipping_cost = 0,
     } = req.body;
 
     if (!listing_price) return res.status(400).json({ error: 'Listing price is required' });
@@ -66,12 +66,28 @@ router.post('/', async (req, res, next) => {
       feeFixed = feeFixed ?? settingsMap.ebay_fee_fixed ?? 0.30;
     }
 
+    // Calculate fees/profit when creating as already-sold
+    let feesTotal = null;
+    let netProfit = null;
+    if (status === 'sold' && sold_price != null) {
+      feesTotal = (sold_price * feeRate + parseFloat(feeFixed)).toFixed(2);
+      netProfit = (sold_price - feesTotal - parseFloat(shipping_cost)).toFixed(2);
+    }
+
     const result = await query(
       `INSERT INTO ebay_listings
-        (card_id, card_name, listing_price, listing_date, status, listing_url, notes, ebay_fee_rate, ebay_fee_fixed)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        (card_id, card_name, set_name, listing_price, listing_date, status,
+         listing_url, notes, ebay_fee_rate, ebay_fee_fixed,
+         sold_price, sold_date, shipping_cost, ebay_fees_total, net_profit)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING *`,
-      [card_id || null, card_name || null, listing_price, listing_date || new Date(), status, listing_url, notes, feeRate, feeFixed]
+      [
+        card_id || null, card_name || null, set_name || null,
+        listing_price, listing_date || new Date(), status,
+        listing_url || null, notes || null, feeRate, feeFixed,
+        sold_price || null, sold_date || null, shipping_cost || 0,
+        feesTotal, netProfit,
+      ]
     );
 
     res.status(201).json(result.rows[0]);

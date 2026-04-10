@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSealed, createSealed, updateSealed, deleteSealed } from '../utils/api';
+import { getSealed, createSealed, updateSealed, deleteSealed, createEbayListing } from '../utils/api';
 import { formatCurrency, formatPct, formatDate, profitClass } from '../utils/format';
 import SealedForm from '../components/SealedForm';
+import SoldForm from '../components/SoldForm';
 import toast from 'react-hot-toast';
 
 const SORT_FIELDS = {
@@ -23,6 +24,7 @@ export default function Sealed() {
   const [sort, setSort] = useState('created_at');
   const [order, setOrder] = useState('DESC');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [sellProduct, setSellProduct] = useState(null);
   const [pageSize, setPageSize] = useState(50);
   const [page, setPage] = useState(1);
 
@@ -77,6 +79,22 @@ export default function Sealed() {
       }
       setShowForm(false);
       load();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleSell = async (soldData) => {
+    try {
+      await createEbayListing({
+        card_name: sellProduct.name,
+        set_name: sellProduct.set_name,
+        listing_price: soldData.sold_price,
+        status: 'sold',
+        ...soldData,
+      });
+      toast.success(`${sellProduct.name} added to eBay tracker as sold!`);
+      setSellProduct(null);
     } catch (err) {
       toast.error(err.message);
     }
@@ -238,6 +256,11 @@ export default function Sealed() {
                   <td className="table-td">
                     <div className="flex items-center gap-1">
                       <button
+                        onClick={() => setSellProduct(p)}
+                        className="p-1.5 rounded hover:bg-green-50 text-gray-500 hover:text-green-600 transition-colors"
+                        title="Mark as Sold on eBay"
+                      >💵</button>
+                      <button
                         onClick={() => openEdit(p)}
                         className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors"
                         title="Edit"
@@ -280,6 +303,13 @@ export default function Sealed() {
       </div>
 
       {/* Modals */}
+      {sellProduct && (
+        <SoldForm
+          listing={{ card_name: sellProduct.name, purchase_price: sellProduct.purchase_price }}
+          onSave={handleSell}
+          onClose={() => setSellProduct(null)}
+        />
+      )}
       {showForm && (
         <SealedForm
           product={editProduct}

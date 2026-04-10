@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCards, createCard, updateCard, deleteCard, exportCards, bulkDeleteCards } from '../utils/api';
+import { getCards, createCard, updateCard, deleteCard, exportCards, bulkDeleteCards, createEbayListing } from '../utils/api';
 import { formatCurrency, formatPct, formatDate, profitClass, conditionBadgeClass } from '../utils/format';
 import CardForm from '../components/CardForm';
 import CSVImport from '../components/CSVImport';
+import SoldForm from '../components/SoldForm';
 import toast from 'react-hot-toast';
 
 const SORT_FIELDS = {
@@ -26,6 +27,7 @@ export default function Collection() {
   const [sort, setSort] = useState('created_at');
   const [order, setOrder] = useState('DESC');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [sellCard, setSellCard] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [pageSize, setPageSize] = useState(50);
   const [page, setPage] = useState(1);
@@ -85,6 +87,23 @@ export default function Collection() {
       }
       setShowForm(false);
       load();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleSell = async (soldData) => {
+    try {
+      await createEbayListing({
+        card_id: sellCard.id,
+        card_name: sellCard.name,
+        set_name: sellCard.set_name,
+        listing_price: soldData.sold_price,
+        status: 'sold',
+        ...soldData,
+      });
+      toast.success(`${sellCard.name} added to eBay tracker as sold!`);
+      setSellCard(null);
     } catch (err) {
       toast.error(err.message);
     }
@@ -300,6 +319,11 @@ export default function Collection() {
                   <td className="table-td">
                     <div className="flex items-center gap-1">
                       <button
+                        onClick={() => setSellCard(card)}
+                        className="p-1.5 rounded hover:bg-green-50 text-gray-500 hover:text-green-600 transition-colors"
+                        title="Mark as Sold on eBay"
+                      >💵</button>
+                      <button
                         onClick={() => openEdit(card)}
                         className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors"
                         title="Edit"
@@ -356,6 +380,13 @@ export default function Collection() {
       )}
 
       {/* Modals */}
+      {sellCard && (
+        <SoldForm
+          listing={{ card_name: sellCard.name, purchase_price: sellCard.purchase_price }}
+          onSave={handleSell}
+          onClose={() => setSellCard(null)}
+        />
+      )}
       {showForm && (
         <CardForm
           card={editCard}
