@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getEbayListings, createEbayListing, updateEbayListing, markEbaySold, deleteEbayListing, exportEbay, importEbayOrders } from '../utils/api';
+import { getEbayListings, createEbayListing, updateEbayListing, markEbaySold, deleteEbayListing, exportEbay, exportEbaySold, importEbayOrders } from '../utils/api';
 import { formatCurrency, formatDate, profitClass, statusBadgeClass } from '../utils/format';
 import EbayForm from '../components/EbayForm';
 import SoldForm from '../components/SoldForm';
@@ -115,7 +115,8 @@ export default function EbayTracker() {
           <p className="text-sm text-gray-500">{listings.length} listing{listings.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={exportEbay} className="btn-secondary text-sm">📤 Export CSV</button>
+          <button onClick={exportEbay} className="btn-secondary text-sm">📤 Export All</button>
+          <button onClick={exportEbaySold} className="btn-secondary text-sm">📤 Export Sold</button>
           <label className={`btn-secondary text-sm cursor-pointer ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
             {importing ? <><span className="spinner mr-1" style={{ width: 12, height: 12, borderWidth: 2 }} />Importing…</> : '📥 Import eBay Orders'}
             <input type="file" accept=".csv" className="hidden" onChange={handleImportEbay} disabled={importing} />
@@ -215,9 +216,16 @@ export default function EbayTracker() {
                     <p className="font-medium text-gray-900 whitespace-nowrap">{listing.card_name || <span className="text-gray-400 italic">No card linked</span>}</p>
                     {listing.set_name && <p className="text-xs text-gray-400">{listing.set_name}</p>}
                     {listing.listing_url && (
-                      <a href={listing.listing_url} target="_blank" rel="noopener noreferrer" className="text-xs text-pokemon-blue hover:underline">
-                        View listing ↗
-                      </a>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <a href={listing.listing_url} target="_blank" rel="noopener noreferrer" className="text-xs text-pokemon-blue hover:underline">
+                          View listing ↗
+                        </a>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(listing.listing_url); toast.success('Link copied!'); }}
+                          className="text-xs text-gray-400 hover:text-gray-600 px-1"
+                          title="Copy link"
+                        >📋</button>
+                      </div>
                     )}
                   </td>
                   <td className="table-td font-semibold">{formatCurrency(listing.listing_price)}</td>

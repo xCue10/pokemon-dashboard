@@ -12,6 +12,7 @@ export default function EbayForm({ listing, onSave, onClose }) {
   const [form, setForm] = useState(EMPTY);
   const [cards, setCards] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [cardSearch, setCardSearch] = useState('');
 
   useEffect(() => {
     getCards().then(setCards).catch(() => {});
@@ -69,6 +70,13 @@ export default function EbayForm({ listing, onSave, onClose }) {
 
   const selectedCard = cards.find(c => String(c.id) === String(form.card_id));
 
+  const filteredCards = cardSearch.trim()
+    ? cards.filter(c =>
+        c.name.toLowerCase().includes(cardSearch.toLowerCase()) ||
+        (c.set_name && c.set_name.toLowerCase().includes(cardSearch.toLowerCase()))
+      )
+    : cards;
+
   const handleCardSelect = (cardId) => {
     set('card_id', cardId);
     if (cardId) {
@@ -104,9 +112,15 @@ export default function EbayForm({ listing, onSave, onClose }) {
             {/* Card Link */}
             <div>
               <label className="label">Link to Collection Card (optional)</label>
+              <input
+                className="input mb-1"
+                placeholder="🔍 Search cards…"
+                value={cardSearch}
+                onChange={e => setCardSearch(e.target.value)}
+              />
               <select className="input" value={form.card_id} onChange={e => handleCardSelect(e.target.value)}>
                 <option value="">— No linked card —</option>
-                {cards.map(c => (
+                {filteredCards.map(c => (
                   <option key={c.id} value={c.id}>
                     {c.name} {c.set_name ? `— ${c.set_name}` : ''} {c.condition ? `(${c.condition})` : ''}
                   </option>

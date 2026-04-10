@@ -209,4 +209,47 @@ router.get('/ebay', async (req, res, next) => {
   }
 });
 
+// GET /api/export/ebay-sold — sold listings only
+router.get('/ebay-sold', async (req, res, next) => {
+  try {
+    const result = await query(`
+      SELECT e.id,
+        COALESCE(e.card_name, c.name) AS card_name,
+        COALESCE(e.set_name, c.set_name) AS set_name,
+        e.listing_price, e.listing_date, e.sold_price, e.sold_date,
+        e.ebay_fee_rate, e.ebay_fees_total, e.shipping_cost, e.net_profit,
+        e.listing_url, e.notes
+      FROM ebay_listings e
+      LEFT JOIN cards c ON c.id = e.card_id
+      WHERE e.status = 'sold'
+      ORDER BY e.sold_date DESC
+    `);
+
+    const headers = [
+      'id', 'card_name', 'set_name', 'listing_price', 'listing_date',
+      'sold_price', 'sold_date', 'ebay_fee_rate', 'ebay_fees_total',
+      'shipping_cost', 'net_profit', 'listing_url', 'notes'
+    ];
+
+    const csvLines = [
+      headers.join(','),
+      ...result.rows.map(row =>
+        headers.map(h => {
+          const val = row[h];
+          if (val == null) return '';
+          const str = String(val);
+          return str.includes(',') || str.includes('"') || str.includes('\n')
+            ? `"${str.replace(/"/g, '""')}"` : str;
+        }).join(',')
+      )
+    ];
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="ebay_sold.csv"');
+    res.send(csvLines.join('\n'));
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

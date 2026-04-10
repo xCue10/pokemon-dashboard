@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getDashboardStats, getDashboardCharts, updateSettings } from '../utils/api';
+import { getDashboardStats, getDashboardCharts, updateSettings, postSnapshot, getValueHistory } from '../utils/api';
 import { formatCurrency, formatPct, formatDate, profitClass } from '../utils/format';
 import StatCard from '../components/StatCard';
 import PortfolioBySet from '../components/charts/PortfolioBySet';
 import PriceComparison from '../components/charts/PriceComparison';
 import MonthlySales from '../components/charts/MonthlySales';
+import ValueHistory from '../components/charts/ValueHistory';
 import toast from 'react-hot-toast';
 
 function Loading() {
@@ -21,17 +22,22 @@ function Loading() {
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [charts, setCharts] = useState(null);
+  const [valueHistory, setValueHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [feeRate, setFeeRate] = useState('0.1325');
   const [feeFixed, setFeeFixed] = useState('0.30');
+  const [roiThreshold, setRoiThreshold] = useState(() => localStorage.getItem('roi_threshold') || '50');
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [s, c] = await Promise.all([getDashboardStats(), getDashboardCharts()]);
+      const [s, c, h] = await Promise.all([getDashboardStats(), getDashboardCharts(), getValueHistory()]);
       setStats(s);
       setCharts(c);
+      setValueHistory(h);
+      // Take a snapshot for today (server deduplicates per day)
+      postSnapshot().catch(() => {});
     } catch (err) {
       toast.error('Failed to load dashboard: ' + err.message);
     } finally {
@@ -44,6 +50,7 @@ export default function Dashboard() {
   const saveSettings = async () => {
     try {
       await updateSettings({ ebay_fee_rate: parseFloat(feeRate), ebay_fee_fixed: parseFloat(feeFixed) });
+      localStorage.setItem('roi_threshold', roiThreshold);
       toast.success('Settings saved!');
       setShowSettings(false);
     } catch (err) {
@@ -140,6 +147,11 @@ export default function Dashboard() {
         <MonthlySales data={charts?.monthly_sales || []} />
       </div>
 
+      <div className="card">
+        <h3 className="font-bold text-gray-900 mb-4">Collection Value Over Time</h3>
+        <ValueHistory data={valueHistory} />
+      </div>
+
       {/* Performers row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PerformersTable title="🏆 Best Performers" cards={best_performers} />
@@ -186,6 +198,11 @@ export default function Dashboard() {
               <div>
                 <label className="label">Fixed Fee per Sale ($)</label>
                 <input className="input" type="number" step="0.01" min="0" value={feeFixed} onChange={e => setFeeFixed(e.target.value)} />
+              </div>
+              <div>
+                <label className="label">ROI Alert Threshold (%)</label>
+                <input className="input" type="number" step="1" min="0" value={roiThreshold} onChange={e => setRoiThreshold(e.target.value)} placeholder="e.g. 50" />
+                <p className="text-xs text-gray-400 mt-1">Cards in Collection with ROI ≥ this value will be flagged.</p>
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setShowSettings(false)} className="btn-secondary flex-1">Cancel</button>

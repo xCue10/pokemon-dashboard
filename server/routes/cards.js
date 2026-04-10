@@ -116,6 +116,19 @@ router.put('/:id', async (req, res, next) => {
   }
 });
 
+// DELETE /api/cards/bulk
+router.delete('/bulk', async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'ids array required' });
+    const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+    const result = await query(`DELETE FROM cards WHERE id IN (${placeholders}) RETURNING id`, ids);
+    res.json({ deleted: result.rows.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/cards/:id
 router.delete('/:id', async (req, res, next) => {
   try {

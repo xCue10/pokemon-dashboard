@@ -93,6 +93,19 @@ async function migrate() {
     )
   `);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS value_snapshots (
+      id SERIAL PRIMARY KEY,
+      snapshot_date DATE UNIQUE NOT NULL,
+      total_invested DECIMAL(12,2),
+      total_market_value DECIMAL(12,2),
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  // Add set_name column to ebay_listings if it doesn't exist
+  await query(`ALTER TABLE ebay_listings ADD COLUMN IF NOT EXISTS set_name VARCHAR(255)`);
+
   // Default settings
   await query(`
     INSERT INTO settings (key, value) VALUES

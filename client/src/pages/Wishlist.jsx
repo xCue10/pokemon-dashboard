@@ -54,6 +54,18 @@ export default function Wishlist() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Keyboard shortcut: N = Add to Wishlist
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'n' && !e.ctrlKey && !e.metaKey &&
+          !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        openAdd();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const openAdd = () => { setEditItem(null); setShowForm(true); };
   const openEdit = (item) => { setEditItem(item); setShowForm(true); };
 

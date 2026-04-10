@@ -23,6 +23,8 @@ export default function Sealed() {
   const [sort, setSort] = useState('created_at');
   const [order, setOrder] = useState('DESC');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [pageSize, setPageSize] = useState(50);
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,6 +42,19 @@ export default function Sealed() {
   }, [search, filterSet, sort, order]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { setPage(1); }, [search, filterSet, sort, order]);
+
+  // Keyboard shortcut: N = Add Product
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'n' && !e.ctrlKey && !e.metaKey &&
+          !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        openAdd();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const sets = [...new Set(products.map(p => p.set_name).filter(Boolean))].sort();
 
@@ -86,6 +101,9 @@ export default function Sealed() {
   const totalInvested = products.reduce((s, p) => s + (parseFloat(p.purchase_price) || 0) * p.quantity, 0);
   const totalMarket = products.reduce((s, p) => s + (parseFloat(p.market_price) || 0) * p.quantity, 0);
   const totalProfit = totalMarket - totalInvested;
+
+  const totalPages = pageSize === 'all' ? 1 : Math.ceil(products.length / pageSize);
+  const displayedProducts = pageSize === 'all' ? products : products.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="space-y-4">
@@ -170,7 +188,7 @@ export default function Sealed() {
                   <p className="font-medium">No sealed products yet</p>
                   <p className="text-sm mt-1">Click <strong>+ Add Product</strong> to get started</p>
                 </td></tr>
-              ) : products.map(p => (
+              ) : displayedProducts.map(p => (
                 <tr key={p.id} className="table-row-hover">
                   <td className="table-td">
                     {p.image_url ? (
@@ -236,6 +254,29 @@ export default function Sealed() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {products.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 flex-wrap gap-2">
+            <div className="flex items-center gap-1 text-sm text-gray-500">
+              <span className="mr-1">Show:</span>
+              {[25, 50, 100, 'all'].map(s => (
+                <button key={s} onClick={() => { setPageSize(s); setPage(1); }}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${pageSize === s ? 'bg-pokemon-red text-white' : 'hover:bg-gray-100 text-gray-600'}`}>
+                  {s === 'all' ? 'All' : s}
+                </button>
+              ))}
+            </div>
+            {pageSize !== 'all' && totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-2 py-1 rounded hover:bg-gray-100 disabled:opacity-30 text-sm">←</button>
+                <span className="text-sm text-gray-500 px-1">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-2 py-1 rounded hover:bg-gray-100 disabled:opacity-30 text-sm">→</button>
+              </div>
+            )}
+            <span className="text-xs text-gray-400">{products.length} total</span>
+          </div>
+        )}
       </div>
 
       {/* Modals */}

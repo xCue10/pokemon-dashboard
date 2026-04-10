@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCards, createCard, updateCard, deleteCard, exportCards } from '../utils/api';
+import { getCards, createCard, updateCard, deleteCard, exportCards, bulkDeleteCards } from '../utils/api';
 import { formatCurrency, formatPct, formatDate, profitClass, conditionBadgeClass } from '../utils/format';
 import CardForm from '../components/CardForm';
 import CSVImport from '../components/CSVImport';
@@ -26,6 +26,10 @@ export default function Collection() {
   const [sort, setSort] = useState('created_at');
   const [order, setOrder] = useState('DESC');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [pageSize, setPageSize] = useState(50);
+  const [page, setPage] = useState(1);
+  const roiThreshold = parseFloat(localStorage.getItem('roi_threshold') || '0');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,6 +48,21 @@ export default function Collection() {
   }, [search, filterSet, filterCondition, sort, order]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Reset page when filters/sort change
+  useEffect(() => { setPage(1); setSelected(new Set()); }, [search, filterSet, filterCondition, sort, order]);
+
+  // Keyboard shortcut: N = Add Card
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'n' && !e.ctrlKey && !e.metaKey &&
+          !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        openAdd();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const sets = [...new Set(cards.map(c => c.set_name).filter(Boolean))].sort();
 
@@ -82,6 +101,34 @@ export default function Collection() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      const ids = [...selected];
+      await bulkDeleteCards(ids);
+      toast.success(`Deleted ${ids.length} card${ids.length !== 1 ? 's' : ''}`);
+      setSelected(new Set());
+      load();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === displayedCards.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(displayedCards.map(c => c.id)));
+    }
+  };
+
   const sortIcon = (field) => {
     if (sort !== field) return <span className="text-gray-300 ml-1">↕</span>;
     return <span className="text-pokemon-red ml-1">{order === 'ASC' ? '↑' : '↓'}</span>;
@@ -90,6 +137,9 @@ export default function Collection() {
   const totalInvested = cards.reduce((s, c) => s + (parseFloat(c.purchase_price) || 0) * c.quantity, 0);
   const totalMarket = cards.reduce((s, c) => s + (parseFloat(c.market_price) || 0) * c.quantity, 0);
   const totalProfit = totalMarket - totalInvested;
+
+  const totalPages = pageSize === 'all' ? 1 : Math.ceil(cards.length / pageSize);
+  const displayedCards = pageSize === 'all' ? cards : cards.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="space-y-4">
@@ -154,6 +204,15 @@ export default function Collection() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="table-th w-8">
+                  <input
+                    type="checkbox"
+                    className="rounded"
+                    checked={displayedCards.length > 0 && selected.size === displayedCards.length}
+                    onChange={toggleSelectAll}
+                    title="Select all"
+                  />
+                </th>
                 {Object.entries(SORT_FIELDS).map(([field, label]) => (
                   <th key={field} className="table-th cursor-pointer" onClick={() => handleSort(field)}>
                     {label}{sortIcon(field)}
@@ -174,19 +233,28 @@ export default function Collection() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={11} className="text-center py-12 text-gray-400">
+                <tr><td colSpan={12} className="text-center py-12 text-gray-400">
                   <div className="spinner mx-auto mb-2" />Loading…
                 </td></tr>
               ) : cards.length === 0 ? (
-                <tr><td colSpan={11} className="text-center py-16 text-gray-400">
+                <tr><td colSpan={12} className="text-center py-16 text-gray-400">
                   <p className="text-4xl mb-3">🃏</p>
                   <p className="font-medium">No cards yet</p>
-                  <p className="text-sm mt-1">Click <strong>+ Add Card</strong> to start your collection</p>
+                  <p className="text-sm mt-1">Press <kbd className="bg-gray-100 px-1 rounded text-xs">N</kbd> or click <strong>+ Add Card</strong> to start your collection</p>
                 </td></tr>
-              ) : cards.map(card => (
-                <tr key={card.id} className="table-row-hover">
+              ) : displayedCards.map(card => {
+                const isHot = roiThreshold > 0 && parseFloat(card.roi_pct) >= roiThreshold;
+                return (
+                <tr key={card.id} className={`table-row-hover ${selected.has(card.id) ? 'bg-blue-50' : ''}`}>
+                  <td className="table-td">
+                    <input type="checkbox" className="rounded" checked={selected.has(card.id)} onChange={() => toggleSelect(card.id)} />
+                  </td>
                   <td className="table-td font-medium text-gray-900 max-w-xs">
-                    <p className="truncate">{card.name}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="truncate">{card.name}</p>
+                      {isHot && <span className="text-xs bg-green-100 text-green-700 border border-green-200 rounded px-1 font-medium flex-shrink-0">🔥 HOT</span>}
+                      {card.notes && <span className="text-gray-400 flex-shrink-0" title={card.notes}>📝</span>}
+                    </div>
                   </td>
                   <td className="table-td text-gray-500 whitespace-nowrap">{card.set_name || '—'}</td>
                   <td className="table-td text-gray-500">{card.card_number || '—'}</td>
@@ -244,15 +312,47 @@ export default function Collection() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ); })}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {cards.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 flex-wrap gap-2">
+            <div className="flex items-center gap-1 text-sm text-gray-500">
+              <span className="mr-1">Show:</span>
+              {[25, 50, 100, 'all'].map(s => (
+                <button key={s} onClick={() => { setPageSize(s); setPage(1); }}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${pageSize === s ? 'bg-pokemon-red text-white' : 'hover:bg-gray-100 text-gray-600'}`}>
+                  {s === 'all' ? 'All' : s}
+                </button>
+              ))}
+            </div>
+            {pageSize !== 'all' && totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-2 py-1 rounded hover:bg-gray-100 disabled:opacity-30 text-sm">←</button>
+                <span className="text-sm text-gray-500 px-1">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-2 py-1 rounded hover:bg-gray-100 disabled:opacity-30 text-sm">→</button>
+              </div>
+            )}
+            <span className="text-xs text-gray-400">{cards.length} total</span>
+          </div>
+        )}
       </div>
 
-      {/* Notes column tooltip hint */}
-      {cards.some(c => c.notes) && (
-        <p className="text-xs text-gray-400 text-center">Hover over card name to see notes</p>
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white rounded-2xl shadow-2xl px-6 py-3 flex items-center gap-4">
+          <span className="text-sm font-medium">{selected.size} card{selected.size !== 1 ? 's' : ''} selected</span>
+          <button onClick={() => setSelected(new Set())} className="text-xs text-gray-400 hover:text-white transition-colors">Clear</button>
+          <button
+            onClick={handleBulkDelete}
+            className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"
+          >
+            Delete selected
+          </button>
+        </div>
       )}
 
       {/* Modals */}

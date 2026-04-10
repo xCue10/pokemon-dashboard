@@ -19,6 +19,7 @@ export const getCard = (id) => api.get(`/cards/${id}`).then(r => r.data);
 export const createCard = (data) => api.post('/cards', data).then(r => r.data);
 export const updateCard = (id, data) => api.put(`/cards/${id}`, data).then(r => r.data);
 export const deleteCard = (id) => api.delete(`/cards/${id}`).then(r => r.data);
+export const bulkDeleteCards = (ids) => api.delete('/cards/bulk', { data: { ids } }).then(r => r.data);
 
 // eBay
 export const getEbayListings = (params = {}) => api.get('/ebay', { params }).then(r => r.data);
@@ -32,6 +33,8 @@ export const getDashboardStats = () => api.get('/dashboard/stats').then(r => r.d
 export const getDashboardCharts = () => api.get('/dashboard/charts').then(r => r.data);
 export const getSettings = () => api.get('/dashboard/settings').then(r => r.data);
 export const updateSettings = (data) => api.put('/dashboard/settings', data).then(r => r.data);
+export const postSnapshot = () => api.post('/dashboard/snapshot').then(r => r.data);
+export const getValueHistory = () => api.get('/dashboard/value-history').then(r => r.data);
 
 // Wishlist
 export const getWishlist = (params = {}) => api.get('/wishlist', { params }).then(r => r.data);
@@ -60,5 +63,6 @@ export const importCards = (file) => {
 };
 export const exportCards = () => window.open('/api/export/cards', '_blank');
 export const exportEbay = () => window.open('/api/export/ebay', '_blank');
+export const exportEbaySold = () => window.open('/api/export/ebay-sold', '_blank');
 
 export default api;

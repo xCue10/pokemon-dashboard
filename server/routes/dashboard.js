@@ -47,7 +47,7 @@ router.get('/stats', async (req, res, next) => {
       `),
       // Recent sales
       query(`
-        SELECT e.*, c.name AS card_name, c.image_url, c.set_name
+        SELECT e.*, COALESCE(e.card_name, c.name) AS card_name, c.image_url, COALESCE(e.set_name, c.set_name) AS set_name
         FROM ebay_listings e
         LEFT JOIN cards c ON c.id = e.card_id
         WHERE e.status = 'sold'
@@ -193,6 +193,48 @@ router.put('/settings', async (req, res, next) => {
 
     const result = await query('SELECT key, value FROM settings');
     res.json(Object.fromEntries(result.rows.map(r => [r.key, r.value])));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/dashboard/snapshot — upserts today's value snapshot
+router.post('/snapshot', async (req, res, next) => {
+  try {
+    const result = await query(`
+      SELECT
+        COALESCE(SUM(purchase_price * quantity), 0) AS total_invested,
+        COALESCE(SUM(market_price * quantity), 0) AS total_market_value
+      FROM (
+        SELECT quantity, purchase_price, market_price FROM cards
+        UNION ALL
+        SELECT quantity, purchase_price, market_price FROM sealed_products
+      ) AS combined
+    `);
+    const { total_invested, total_market_value } = result.rows[0];
+    await query(`
+      INSERT INTO value_snapshots (snapshot_date, total_invested, total_market_value)
+      VALUES (CURRENT_DATE, $1, $2)
+      ON CONFLICT (snapshot_date) DO UPDATE
+        SET total_invested = EXCLUDED.total_invested,
+            total_market_value = EXCLUDED.total_market_value
+    `, [total_invested, total_market_value]);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/dashboard/value-history — last 90 daily snapshots
+router.get('/value-history', async (req, res, next) => {
+  try {
+    const result = await query(`
+      SELECT snapshot_date, total_invested, total_market_value
+      FROM value_snapshots
+      ORDER BY snapshot_date ASC
+      LIMIT 90
+    `);
+    res.json(result.rows);
   } catch (err) {
     next(err);
   }
